@@ -84,7 +84,7 @@ function renderProducts(filter = 'all') {
                 <div class="image-wrapper">
                     <img src="${p.image}" alt="${p.name}">
                     <div class="image-overlay">
-                        <button class="view-btn">Quick View</button>
+                        <button class="view-btn" onclick="openProductModal(${p.id}, getCardQuantity(this))">Quick View</button>
                     </div>
                 </div>
                 <div class="product-info">
@@ -112,9 +112,14 @@ window.updateCardQty = function(btn, delta) {
 };
 
 window.handleAddToCart = function(btn, id) {
-    const qtyVal = btn.parentElement.querySelector('.qty-val');
-    const quantity = qtyVal ? parseInt(qtyVal.textContent) : 1;
-    window.addToCart(id, quantity);
+    const quantity = window.getCardQuantity(btn);
+    window.openProductModal(id, quantity);
+};
+
+window.getCardQuantity = function(triggerElement) {
+    const card = triggerElement.closest('.product-card');
+    const qtyVal = card ? card.querySelector('.qty-val') : null;
+    return qtyVal ? parseInt(qtyVal.textContent) : 1;
 };
 
 window.products = products;

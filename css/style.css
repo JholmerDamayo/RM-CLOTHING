@@ -179,36 +179,49 @@ body.loading {
 }
 
 .nav-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1.5rem;
-}
-
-.cart-btn {
-    cursor: pointer;
     position: fixed;
     top: 2rem;
     right: 3rem;
     display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    z-index: 1100;
+}
+
+.status-btn {
+    cursor: pointer;
+    display: flex;
     align-items: center;
+    justify-content: center;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     padding: 10px 15px;
     border-radius: 50px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 1100; /* Above navbar */
+    min-width: 62px;
     transition: var(--transition-fast);
+    color: var(--color-white);
 }
 
-.cart-btn:hover {
+.status-btn .icon {
+    font-size: 1.15rem;
+}
+
+.cart-btn,
+.shop-btn {
+    appearance: none;
+}
+
+.status-btn:hover {
     background: var(--color-accent);
 }
 
-.cart-btn:hover .icon {
+.status-btn:hover .icon {
     filter: invert(1);
 }
 
-.cart-count {
+.cart-count,
+.shop-count {
     background: var(--color-accent);
     color: var(--color-black);
     min-width: 1.35rem;
@@ -541,8 +554,25 @@ body.loading {
     flex-direction: column;
 }
 
-.cart-sidebar.open {
+.cart-sidebar.open,
+.orders-sidebar.open {
     right: 0;
+}
+
+.orders-sidebar {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    width: 400px;
+    height: 100vh;
+    background: var(--color-beige);
+    color: var(--color-black);
+    z-index: 2000;
+    box-shadow: -20px 0 50px rgba(0,0,0,0.35);
+    transition: var(--transition-mid);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .cart-header {
@@ -561,6 +591,12 @@ body.loading {
 }
 
 .cart-items {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 2rem 0;
+}
+
+.orders-items {
     flex-grow: 1;
     overflow-y: auto;
     padding: 2rem 0;
@@ -595,6 +631,233 @@ body.loading {
     text-transform: uppercase;
     letter-spacing: 0.2em;
     cursor: pointer;
+}
+
+.notification-card {
+    background: var(--color-white);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
+
+.notification-card h4 {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+}
+
+.notification-time {
+    display: inline-block;
+    margin-bottom: 0.85rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+.notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.88rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.notification-summary {
+    margin-top: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.product-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-mid);
+    z-index: 3000;
+}
+
+.product-modal.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.product-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 5, 5, 0.7);
+    backdrop-filter: blur(10px);
+}
+
+.product-modal-dialog {
+    position: relative;
+    width: min(760px, calc(100% - 2rem));
+    background: var(--color-white);
+    color: var(--color-black);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.product-modal-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.product-modal-media {
+    min-height: 420px;
+    background: var(--color-beige);
+}
+
+.product-modal-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-modal-content {
+    padding: 2.5rem;
+}
+
+.product-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+}
+
+.product-modal-kicker {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.55);
+    margin-bottom: 1rem;
+}
+
+.product-modal-content h3 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    line-height: 1.1;
+    margin-bottom: 0.85rem;
+}
+
+.product-modal-description {
+    font-size: 0.98rem;
+    color: rgba(0, 0, 0, 0.72);
+    margin-bottom: 1.5rem;
+}
+
+.product-modal-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.size-picker {
+    margin-bottom: 2rem;
+}
+
+.size-picker-label {
+    margin-bottom: 0.85rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.size-options {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.size-option {
+    min-width: 56px;
+    padding: 0.9rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    background: transparent;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.size-option.selected,
+.size-option:hover {
+    background: var(--color-black);
+    color: var(--color-white);
+    border-color: var(--color-black);
+}
+
+.product-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.modal-action-btn {
+    border: none;
+    padding: 1rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.modal-cart-btn {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--color-black);
+}
+
+.modal-cart-btn:hover {
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.modal-checkout-btn {
+    background: var(--color-black);
+    color: var(--color-white);
+}
+
+.modal-checkout-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-black);
+}
+
+body.modal-open {
+    overflow: hidden;
 }
 
 /* About Section */

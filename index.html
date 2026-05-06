@@ -42,10 +42,14 @@
                 <li><a href="#feedback" class="nav-link">Feedback</a></li>
             </ul>
             <div class="nav-actions">
-                <div class="cart-btn" id="cart-btn">
+                <button class="shop-btn status-btn" id="shop-btn" type="button" aria-label="Buyer notifications">
+                    <span class="icon">🛍️</span>
+                    <span class="shop-count">0</span>
+                </button>
+                <button class="cart-btn status-btn" id="cart-btn" type="button" aria-label="Shopping cart">
                     <span class="icon">🛒</span>
                     <span class="cart-count">0</span>
-                </div>
+                </button>
             </div>
         </div>
     </nav>
@@ -65,9 +69,53 @@
                 <span>Total:</span>
                 <span id="cart-total">$0.00</span>
             </div>
-            <button class="checkout-btn">Checkout</button>
+            <button class="checkout-btn" id="cart-checkout-btn" type="button">Checkout</button>
         </div>
     </aside>
+
+    <aside id="orders-sidebar" class="orders-sidebar">
+        <div class="cart-header">
+            <h2>Buyer Notifications</h2>
+            <button id="close-orders" class="close-btn" type="button">&times;</button>
+        </div>
+        <div id="buyer-notifications" class="orders-items">
+            <p class="empty-msg">No buyer notifications yet.</p>
+        </div>
+    </aside>
+
+    <div id="product-modal" class="product-modal" aria-hidden="true">
+        <div id="product-modal-backdrop" class="product-modal-backdrop"></div>
+        <div class="product-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+            <button id="product-modal-close" class="close-btn product-modal-close" type="button">&times;</button>
+            <div class="product-modal-layout">
+                <div class="product-modal-media">
+                    <img id="product-modal-image" src="" alt="">
+                </div>
+                <div class="product-modal-content">
+                    <p class="product-modal-kicker">Collection Selection</p>
+                    <h3 id="product-modal-title"></h3>
+                    <p id="product-modal-description" class="product-modal-description"></p>
+                    <div class="product-modal-meta">
+                        <span id="product-modal-price"></span>
+                        <span id="product-modal-quantity"></span>
+                    </div>
+                    <div class="size-picker">
+                        <p class="size-picker-label">Choose Size</p>
+                        <div class="size-options" id="size-options">
+                            <button class="size-option selected" type="button" data-size="S">S</button>
+                            <button class="size-option" type="button" data-size="M">M</button>
+                            <button class="size-option" type="button" data-size="L">L</button>
+                            <button class="size-option" type="button" data-size="XL">XL</button>
+                        </div>
+                    </div>
+                    <div class="product-modal-actions">
+                        <button id="modal-add-cart-btn" class="modal-action-btn modal-cart-btn" type="button">Cart</button>
+                        <button id="modal-checkout-btn" class="modal-action-btn modal-checkout-btn" type="button">Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main id="main-content">
         <!-- Home Section -->
