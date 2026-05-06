@@ -104,33 +104,6 @@ function renderProducts(filter = 'all') {
     });
 }
 
-function renderTestimonials() {
-    const track = document.getElementById('testimonial-track');
-    if (!track) return;
-
-    track.innerHTML = '';
-
-    testimonials.forEach((t) => {
-        const slide = document.createElement('div');
-        slide.className = 'testimonial-slide';
-        slide.innerHTML = `
-            <div class="testimonial-card">
-                <div class="testimonial-avatar">
-                    <img src="${t.avatar}" alt="${t.name}">
-                </div>
-                <div class="testimonial-content">
-                    <p class="quote">"${t.text}"</p>
-                    <div class="author">
-                        <span class="name">${t.name}</span>
-                        <span class="role">${t.role}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        track.appendChild(slide);
-    });
-}
-
 window.updateCardQty = function(btn, delta) {
     const qtyVal = btn.parentElement.querySelector('.qty-val');
     let current = parseInt(qtyVal.textContent);
@@ -146,4 +119,3 @@ window.handleAddToCart = function(btn, id) {
 
 window.products = products;
 window.renderProducts = renderProducts;
-window.renderTestimonials = renderTestimonials;

@@ -7,7 +7,6 @@ let cart = [];
 document.addEventListener('DOMContentLoaded', () => {
     // Initial content render
     if (window.renderProducts) window.renderProducts();
-    if (window.renderTestimonials) window.renderTestimonials();
 
     initCartUI();
     initFilters();
