@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM CLOTHING | Modern Aesthetic Fashion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="loading">
+    
+    <!-- Loading Screen -->
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <span class="loader-text">RM CLOTHING</span>
+            <div class="loader-bar"></div>
+        </div>
+    </div>
+
+    <!-- Sticky Navbar -->
+    <nav id="navbar" class="navbar transparent">
+        <div class="nav-container">
+            <div class="menu-toggle" id="mobile-menu-btn">
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <div class="logo">
+                <img src="https://scontent-mnl1-2.xx.fbcdn.net/v/t39.30808-6/688293196_122100700785295875_5834459644778230756_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=1d70fc&_nc_eui2=AeGrTZf6B_9abE9ISQJzyNtG-vbx7DaVTTT69vHsNpVNNAP4T_XN6BEWu04aMVNQBMW6SVOCBedyi6K3s7NM0t65&_nc_ohc=2arVinEpVjIQ7kNvwH--YuB&_nc_oc=AdoRv5cXl-QuWt6yW4FanoqWQ3xOmk73bBsTMEO5AKgZ3XioeyZth4Gkk6-Ym9CVLTM&_nc_zt=23&_nc_ht=scontent-mnl1-2.xx&_nc_gid=TGYzw9MkmfkGnSzRkPDSfQ&_nc_ss=7b2a8&oh=00_Af5GVJA9y_U62XcEN7MZr2tJ5pFaNiWuW7WE4gVmbK76aw&oe=6A009234" alt="RM Logo" class="brand-logo-img">
+                RM CLOTHING
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#products" class="nav-link">Products</a></li>
+                <li><a href="#about" class="nav-link">About Us</a></li>
+                <li><a href="#contact" class="nav-link">Contact Us</a></li>
+                <li><a href="#feedback" class="nav-link">Feedback</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="cart-btn" id="cart-btn">
+                    <span class="icon">🛒</span>
+                    <span class="cart-count">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Sidebar -->
+    <aside id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button id="close-cart" class="close-btn">&times;</button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <!-- Items injected by JS -->
+            <p class="empty-msg">Your cart is empty.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="total">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            <button class="checkout-btn">Checkout</button>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <!-- Home Section -->
+        <section id="home" class="hero fullscreen">
+            <div class="hero-bg">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop" alt="Fashion Banner" class="banner-img">
+                <div class="hero-overlay"></div>
+            </div>
+            <div class="hero-content reveal">
+                <h1 class="main-title">A New Standard of <span>Local Clothing</span></h1>
+                <p class="hero-subtitle">Experience the intersection of cebuano local clothes</p>
+                <div class="hero-btns">
+                    <a href="#products" class="btn primary-btn">Shop Now</a>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <div class="mouse">
+                    <div class="wheel"></div>
+                </div>
+                <p>Scroll</p>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="products-section fullscreen">
+            <div class="section-container">
+                <div class="section-header reveal">
+                    <h2 class="title-serif">The Collection</h2>
+                    <div class="filter-controls">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="essentials">Essentials</button>
+                        <button class="filter-btn" data-filter="statement">Statement</button>
+                        <button class="filter-btn" data-filter="accessories">Accessories</button>
+                    </div>
+                </div>
+                <div id="product-grid" class="product-grid reveal">
+                    <!-- Products injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="about-section fullscreen">
+            <div class="split-layout">
+                <div class="split-image reveal-left">
+                    <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1974&auto=format&fit=crop" alt="Fashion Story">
+                </div>
+                <div class="split-content reveal-right">
+                    <h2 class="title-serif">Our Story</h2>
+                    <p class="story-text">
+                        Rooted in the heart of Cebu, Reymar Caburog, Mark James Damayo, Justine Gabisan, and Joseph Estrera Caburog reflect a shared passion for style and individuality. As Cebuano sellers, we bring together carefully selected clothing and accessories that blend everyday comfort with timeless elegance.
+                    </p>
+                    <p class="story-text">
+                        We believe fashion is more than just appearance—it’s a quiet expression of who you are. Each piece we offer is thoughtfully chosen, focusing on quality, detail, and versatility for those who appreciate simplicity with a touch of luxury.
+                    </p>
+                    <div class="about-stats">
+                        <div class="stat">
+                            <span class="stat-num">12+</span>
+                            <span class="stat-label">Years of Artisanry</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num">100%</span>
+                            <span class="stat-label">Sustainable Silk</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feedback Section -->
+        <section id="feedback" class="feedback-section fullscreen">
+            <div class="section-container">
+                <h2 class="title-serif reveal">Client Impressions</h2>
+                <div class="feedback-container">
+                    <!-- Feedback Form -->
+                    <div class="feedback-form-card reveal">
+                        <h3>Share Your Experience</h3>
+                        <div class="star-rating" id="star-rating">
+                            <span class="star" data-value="1">★</span>
+                            <span class="star" data-value="2">★</span>
+                            <span class="star" data-value="3">★</span>
+                            <span class="star" data-value="4">★</span>
+                            <span class="star" data-value="5">★</span>
+                        </div>
+                        <form id="feedback-form" class="feedback-form">
+                            <textarea id="feedback-comment" placeholder="Tell us about your RM Clothing experience..." required></textarea>
+                            <button type="submit" class="btn primary-btn" id="send-feedback">Send Feedback</button>
+                        </form>
+                    </div>
+
+                    <!-- Recent Feedback Display -->
+                    <div id="recent-feedback" class="recent-feedback reveal">
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section fullscreen">
+            <div class="section-container">
+                <div class="contact-grid">
+                    <div class="contact-info reveal-left">
+                        <h2 class="title-serif">Connect</h2>
+                        <p>Join the conversation or reach out for personalized styling advice.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon">IG</a>
+                            <a href="#" class="social-icon">TW</a>
+                            <a href="#" class="social-icon">FB</a>
+                            <a href="#" class="social-icon">LI</a>
+                        </div>
+                        <div class="contact-details">
+                            <p>Reymar | Estrera | Caburog</p>
+                            <p>Reymarestrera@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-form-container reveal-right">
+                        <form id="contact-form" class="luxury-form">
+                            <div class="input-group">
+                                <input type="text" id="name" required>
+                                <label for="name">Your Name</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="email" id="email" required>
+                                <label for="email">Email Address</label>
+                            </div>
+                            <div class="input-group">
+                                <textarea id="message" required></textarea>
+                                <label for="message">Your Inquiry</label>
+                            </div>
+                            <button type="submit" class="submit-btn btn">Send Inquiry</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 RM CLOTHING. ALL RIGHTS RESERVED.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/products.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
