@@ -314,7 +314,7 @@ function updateCartUI() {
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = '<p class="empty-msg">Your cart is empty.</p>';
         cartCount.textContent = '0';
-        cartTotal.textContent = '$0.00';
+        cartTotal.textContent = '₱0.00';
         return;
     }
 
@@ -516,7 +516,7 @@ function initSmoothScroll() {
 }
 
 function formatMoney(value) {
-    return `$${value.toFixed(2)}`;
+    return `₱${value.toFixed(2)}`;
 }
 
 function formatTimestamp(date) {

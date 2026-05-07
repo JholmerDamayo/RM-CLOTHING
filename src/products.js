@@ -80,7 +80,7 @@ function renderProducts(filter = 'all') {
 
         card.innerHTML = `
             <div class="card-inner">
-                <div class="product-price-label">$${p.price.toFixed(2)}</div>
+                <div class="product-price-label">₱${p.price.toFixed(2)}</div>
                 <div class="image-wrapper">
                     <img src="${p.image}" alt="${p.name}">
                     <div class="image-overlay">
