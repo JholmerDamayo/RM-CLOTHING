@@ -42,11 +42,14 @@
                 <li><a href="#feedback" class="nav-link">Feedback</a></li>
             </ul>
             <div class="nav-actions">
-                <button class="shop-btn status-btn" id="shop-btn" type="button" aria-label="Buyer notifications">
+                <button class="status-btn auth-status-btn" id="auth-btn" type="button" aria-label="Login or create account">
+                    <span class="auth-label">Login</span>
+                </button>
+                <button class="shop-btn status-btn" id="shop-btn" type="button" aria-label="Buyer notifications" hidden>
                     <span class="icon">🛍️</span>
                     <span class="shop-count">0</span>
                 </button>
-                <button class="cart-btn status-btn" id="cart-btn" type="button" aria-label="Shopping cart">
+                <button class="cart-btn status-btn" id="cart-btn" type="button" aria-label="Shopping cart" hidden>
                     <span class="icon">🛒</span>
                     <span class="cart-count">0</span>
                 </button>
@@ -117,6 +120,87 @@
         </div>
     </div>
 
+    <div id="auth-modal" class="auth-modal" aria-hidden="true">
+        <div id="auth-modal-backdrop" class="auth-modal-backdrop"></div>
+        <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-modal-heading">
+            <button id="auth-modal-close" class="close-btn auth-modal-close" type="button">&times;</button>
+            <div class="auth-modal-content">
+                <p class="auth-modal-kicker">Customer Access</p>
+                <h3 id="auth-modal-heading">Login to Continue</h3>
+                <p id="auth-modal-message" class="auth-modal-message">
+                    Sign in or create an account to use cart, checkout, feedback, and inquiries.
+                </p>
+                <div id="auth-switch" class="auth-switch" role="tablist" aria-label="Authentication options">
+                    <button class="auth-switch-btn active" type="button" data-auth-view="login">Login</button>
+                    <button class="auth-switch-btn" type="button" data-auth-view="register">Create Account</button>
+                </div>
+                <form id="auth-login-form" class="auth-form active">
+                    <label class="auth-field">
+                        <span>Email Address</span>
+                        <input type="email" id="auth-login-email" autocomplete="email" required>
+                        <p id="auth-login-email-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <label class="auth-field">
+                        <span>Password</span>
+                        <input type="password" id="auth-login-password" autocomplete="current-password" required>
+                        <p id="auth-login-password-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <label class="auth-checkbox">
+                        <input type="checkbox" id="auth-login-remember">
+                        <span>Remember me</span>
+                    </label>
+                    <button type="submit" class="auth-submit-btn">Login</button>
+                </form>
+                <form id="auth-register-form" class="auth-form">
+                    <label class="auth-field">
+                        <span>Full Name</span>
+                        <input type="text" id="auth-register-name" autocomplete="name" required>
+                        <p id="auth-register-name-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <label class="auth-field">
+                        <span>Email Address</span>
+                        <input type="email" id="auth-register-email" autocomplete="email" required>
+                        <p id="auth-register-email-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <label class="auth-field">
+                        <span>Password</span>
+                        <input type="password" id="auth-register-password" autocomplete="new-password" required>
+                        <p class="auth-field-hint">Use at least 8 characters with letters, a number, and a symbol.</p>
+                        <p id="auth-register-password-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <label class="auth-field">
+                        <span>Confirm Password</span>
+                        <input type="password" id="auth-register-confirm" autocomplete="new-password" required>
+                        <p id="auth-register-confirm-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <button type="submit" class="auth-submit-btn">Create Account</button>
+                </form>
+                <form id="auth-verify-form" class="auth-form">
+                    <label class="auth-field">
+                        <span>Email Address</span>
+                        <input type="email" id="auth-verify-email" autocomplete="email" readonly>
+                    </label>
+                    <label class="auth-field">
+                        <span>Verification Code</span>
+                        <input
+                            type="text"
+                            id="auth-verify-code"
+                            inputmode="numeric"
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            placeholder="Enter the 6-digit code"
+                            required
+                        >
+                        <p id="auth-verify-code-message" class="auth-field-message" aria-live="polite"></p>
+                    </label>
+                    <button type="submit" class="auth-submit-btn">Verify Code</button>
+                    <button id="auth-back-login" type="button" class="auth-secondary-btn">Back to Login</button>
+                </form>
+                <p id="auth-feedback" class="auth-feedback" aria-live="polite"></p>
+            </div>
+        </div>
+    </div>
+
     <main id="main-content">
         <!-- Home Section -->
         <section id="home" class="hero fullscreen">
@@ -146,8 +230,8 @@
                     <h2 class="title-serif">The Collection</h2>
                     <div class="filter-controls">
                         <button class="filter-btn active" data-filter="all">All</button>
-                        <button class="filter-btn" data-filter="essentials">T-Shirts</button>
-                        <button class="filter-btn" data-filter="statement">Pants</button>
+                        <button class="filter-btn" data-filter="tshirts">Tshirts</button>
+                        <button class="filter-btn" data-filter="pants">Pants</button>
                         <button class="filter-btn" data-filter="accessories">Accessories</button>
                     </div>
                 </div>
@@ -166,7 +250,7 @@
                 <div class="split-content reveal-right">
                     <h2 class="title-serif">Our Story</h2>
                     <p class="story-text">
-                        Rooted in the heart of Cebu, Reymar Caburog, Mark James Damayo, Justine Gabisan, and Joseph Estrera Caburog reflect a shared passion for style and individuality. As Cebuano sellers, we bring together carefully selected clothing and accessories that blend everyday comfort with timeless elegance.
+                        Rooted in the heart of Cebu, <a href="https://www.facebook.com/reymar.estrera.9" class="story-link" target="_blank" rel="noopener noreferrer">Reymar Caburog</a>, <a href="https://www.facebook.com/markjames.damayo" class="story-link" target="_blank" rel="noopener noreferrer">Mark James Damayo</a>, <a href="https://www.facebook.com/profile.php?id=61587988797145" class="story-link" target="_blank" rel="noopener noreferrer">Lyle Mae Abejero Castolome</a>, and <a href="https://www.facebook.com/josephe.caburog" class="story-link" target="_blank" rel="noopener noreferrer">Joseph Estrera Caburog</a> reflect a shared passion for style and individuality. As Cebuano sellers, we bring together carefully selected clothing and accessories that blend everyday comfort with timeless elegance.
                     </p>
                     <p class="story-text">
                         We believe fashion is more than just appearance—it’s a quiet expression of who you are. Each piece we offer is thoughtfully chosen, focusing on quality, detail, and versatility for those who appreciate simplicity with a touch of luxury.
@@ -222,13 +306,16 @@
                         <h2 class="title-serif">Connect</h2>
                         <p>Join the conversation or reach out for personalized styling advice.</p>
                         <div class="social-links">
-                            <a href="#" class="social-icon">IG</a>
-                            <a href="#" class="social-icon">TW</a>
-                            <a href="#" class="social-icon">FB</a>
-                            <a href="#" class="social-icon">LI</a>
+                            <a href="https://www.instagram.com/jholmerrrr/" class="social-icon" target="_blank" rel="noopener noreferrer">IG</a>
+                            <a href="https://x.com/Jholmerrrr" class="social-icon" target="_blank" rel="noopener noreferrer">TW</a>
+                            <a href="https://www.facebook.com/profile.php?id=61588876266418" class="social-icon" target="_blank" rel="noopener noreferrer">FB</a>
+                            <a href="https://www.linkedin.com/feed/" class="social-icon" target="_blank" rel="noopener noreferrer">LI</a>
                         </div>
                         <div class="contact-details">
-                            <p>Reymar | Estrera | Caburog</p>
+                            <p><a href="https://www.facebook.com/reymar.estrera.9" class="story-link" target="_blank" rel="noopener noreferrer">Reymar Caburog</a></p>
+                            <p><a href="https://www.facebook.com/markjames.damayo" class="story-link" target="_blank" rel="noopener noreferrer">Mark James Damayo</a></p>
+                            <p><a href="https://www.facebook.com/profile.php?id=61587988797145" class="story-link" target="_blank" rel="noopener noreferrer">Lyle Mae Abejero Castolome</a></p>
+                            <p><a href="https://www.facebook.com/josephe.caburog" class="story-link" target="_blank" rel="noopener noreferrer">Joseph Estrera Caburog</a></p>
                             <p>Reymarestrera@gmail.com</p>
                         </div>
                     </div>

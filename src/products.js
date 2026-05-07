@@ -3,7 +3,7 @@ const products = [
         id: 1,
         name: "Spectral Silk Blouse",
         price: 320.00,
-        category: "essentials",
+        category: "tshirts",
         image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=1976&auto=format&fit=crop",
         description: "Pure mulberry silk with a pearlescent finish."
     },
@@ -11,7 +11,7 @@ const products = [
         id: 2,
         name: "Bespoke Tailored Suit",
         price: 1250.00,
-        category: "statement",
+        category: "pants",
         image: "https://images.unsplash.com/photo-1594932224010-75f43c3afabc?q=80&w=1964&auto=format&fit=crop",
         description: "Hand-stitched wool blend with a modern silhouette."
     },
@@ -19,7 +19,7 @@ const products = [
         id: 3,
         name: "Minimalist Cashmere Coat",
         price: 890.00,
-        category: "essentials",
+        category: "tshirts",
         image: "https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?q=80&w=1974&auto=format&fit=crop",
         description: "Ethically sourced cashmere in midnight charcoal."
     },
@@ -35,7 +35,7 @@ const products = [
         id: 5,
         name: "Architectural Drape Dress",
         price: 610.00,
-        category: "statement",
+        category: "tshirts",
         image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1970&auto=format&fit=crop",
         description: "Heavily draped jersey with a subtle sheen."
     },
@@ -51,7 +51,7 @@ const products = [
         id: 7,
         name: "Ethereal Linen Trousers",
         price: 280.00,
-        category: "essentials",
+        category: "pants",
         image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=1974&auto=format&fit=crop",
         description: "Lightweight Belgian linen for effortless elegance."
     },
@@ -59,7 +59,7 @@ const products = [
         id: 8,
         name: "Midnight Velvet Slip",
         price: 540.00,
-        category: "statement",
+        category: "tshirts",
         image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1968&auto=format&fit=crop",
         description: "Deep noir velvet with delicate lace accents."
     }
@@ -113,6 +113,12 @@ window.updateCardQty = function(btn, delta) {
 
 window.handleAddToCart = function(btn, id) {
     const quantity = window.getCardQuantity(btn);
+    if (typeof window.requireAuth === 'function' && !window.requireAuth(
+        () => window.openProductModal(id, quantity),
+        'Please log in first to add items to your cart.'
+    )) {
+        return;
+    }
     window.openProductModal(id, quantity);
 };
 

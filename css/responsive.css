@@ -60,6 +60,11 @@
         padding: 0.75rem 0.9rem;
     }
 
+    .auth-status-btn {
+        min-width: 76px;
+        padding: 0.75rem 0.9rem;
+    }
+
     .product-modal-dialog {
         width: calc(100% - 1rem);
     }
@@ -70,6 +75,14 @@
 
     .product-modal-actions {
         grid-template-columns: 1fr;
+    }
+
+    .auth-modal-dialog {
+        width: calc(100% - 1rem);
+    }
+
+    .auth-modal-content {
+        padding: 1.5rem;
     }
 }
 
