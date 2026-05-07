@@ -64,6 +64,13 @@ begin
         email = excluded.email,
         full_name = coalesce(excluded.full_name, public.customer_profiles.full_name);
 
+    if lower(new.email) = 'damayojholmer@gmail.com' then
+        insert into public.admin_profiles (user_id, email)
+        values (new.id, new.email)
+        on conflict (user_id) do update
+        set email = excluded.email;
+    end if;
+
     return new;
 end;
 $$;

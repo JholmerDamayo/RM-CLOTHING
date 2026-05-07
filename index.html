@@ -92,7 +92,26 @@
             <button id="product-modal-close" class="close-btn product-modal-close" type="button">&times;</button>
             <div class="product-modal-layout">
                 <div class="product-modal-media">
+                    <button
+                        id="product-modal-gallery-prev"
+                        class="product-modal-gallery-btn product-modal-gallery-btn-prev"
+                        type="button"
+                        aria-label="Previous product image"
+                        hidden
+                    >
+                        &#8249;
+                    </button>
                     <img id="product-modal-image" src="" alt="">
+                    <button
+                        id="product-modal-gallery-next"
+                        class="product-modal-gallery-btn product-modal-gallery-btn-next"
+                        type="button"
+                        aria-label="Next product image"
+                        hidden
+                    >
+                        &#8250;
+                    </button>
+                    <span id="product-modal-gallery-status" class="product-modal-gallery-status" hidden></span>
                 </div>
                 <div class="product-modal-content">
                     <p class="product-modal-kicker">Collection Selection</p>

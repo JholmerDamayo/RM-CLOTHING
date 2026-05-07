@@ -9,11 +9,11 @@ const products = [
     },
     {
         id: 2,
-        name: "Bespoke Tailored Suit",
-        price: 1250.00,
+        name: "Golden Swirl Pants",
+        price: 400.00,
         category: "pants",
-        image: "https://images.unsplash.com/photo-1594932224010-75f43c3afabc?q=80&w=1964&auto=format&fit=crop",
-        description: "Hand-stitched wool blend with a modern silhouette."
+        image: "/products/golden-swirl-pants-model.png",
+        description: "Statement loose-fit pants with a bold gold, black, and cream swirl print."
     },
     {
         id: 3,
@@ -25,43 +25,11 @@ const products = [
     },
     {
         id: 4,
-        name: "Onyx Leather Tote",
-        price: 450.00,
+        name: "Stanley Tumbler 600",
+        price: 600.00,
         category: "accessories",
-        image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1970&auto=format&fit=crop",
-        description: "Full-grain Italian leather with gold hardware."
-    },
-    {
-        id: 5,
-        name: "Architectural Drape Dress",
-        price: 610.00,
-        category: "tshirts",
-        image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1970&auto=format&fit=crop",
-        description: "Heavily draped jersey with a subtle sheen."
-    },
-    {
-        id: 6,
-        name: "Brutalist Gold Ring",
-        price: 210.00,
-        category: "accessories",
-        image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=2070&auto=format&fit=crop",
-        description: "18k solid gold with a hammered texture."
-    },
-    {
-        id: 7,
-        name: "Ethereal Linen Trousers",
-        price: 280.00,
-        category: "pants",
-        image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=1974&auto=format&fit=crop",
-        description: "Lightweight Belgian linen for effortless elegance."
-    },
-    {
-        id: 8,
-        name: "Midnight Velvet Slip",
-        price: 540.00,
-        category: "tshirts",
-        image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1968&auto=format&fit=crop",
-        description: "Deep noir velvet with delicate lace accents."
+        image: "/products/stanley-tumbler-lifestyle.png",
+        description: "Black Stanley tumbler showcased in-store with a clean matte finish and carry handle."
     }
 ];
 

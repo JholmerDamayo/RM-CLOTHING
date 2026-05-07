@@ -32,7 +32,7 @@
     .orders-sidebar { width: 100%; right: -100%; }
 
     .product-modal-layout { grid-template-columns: 1fr; }
-    .product-modal-media { min-height: 280px; }
+    .product-modal-media { height: 360px; }
 }
 
 @media (max-width: 768px) {
@@ -69,12 +69,30 @@
         width: calc(100% - 1rem);
     }
 
+    .product-modal-media {
+        height: 320px;
+    }
+
     .product-modal-content {
         padding: 1.5rem;
     }
 
     .product-modal-actions {
         grid-template-columns: 1fr;
+    }
+
+    .product-modal-gallery-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.7rem;
+    }
+
+    .product-modal-gallery-btn-prev {
+        left: 0.75rem;
+    }
+
+    .product-modal-gallery-btn-next {
+        right: 0.75rem;
     }
 
     .auth-modal-dialog {

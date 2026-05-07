@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM Clothing Admin</title>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body class="admin-page">
+    <div id="admin-auth-screen" class="admin-auth-screen">
+        <div class="admin-auth-shell">
+            <div class="auth-modal-dialog admin-login-card">
+                <div class="auth-modal-content">
+                    <p class="auth-modal-kicker">Admin Access</p>
+                    <h1 class="admin-auth-title">Login to Admin Management</h1>
+                    <p class="auth-modal-message">
+                        Use the same clean login experience as customer access, but in a dedicated white admin workspace.
+                    </p>
+                    <form id="admin-login-form" class="auth-form active">
+                        <label class="auth-field">
+                            <span>Email Address</span>
+                            <input type="email" id="admin-login-email" autocomplete="email" required>
+                            <p id="admin-login-email-message" class="auth-field-message" aria-live="polite"></p>
+                        </label>
+                        <label class="auth-field">
+                            <span>Password</span>
+                            <input type="password" id="admin-login-password" autocomplete="current-password" required>
+                            <p id="admin-login-password-message" class="auth-field-message" aria-live="polite"></p>
+                        </label>
+                        <label class="auth-checkbox">
+                            <input type="checkbox" id="admin-login-remember">
+                            <span>Remember this admin login</span>
+                        </label>
+                        <button type="submit" class="auth-submit-btn">Login</button>
+                        <button id="admin-open-storefront-auth" type="button" class="auth-secondary-btn">Open Storefront</button>
+                    </form>
+                    <p id="admin-auth-feedback" class="auth-feedback" aria-live="polite"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-console" class="admin-console" hidden>
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <p class="admin-brand-kicker">RM Clothing</p>
+                <h2>Admin Management</h2>
+                <p class="admin-brand-copy">Dashboard access for products, orders, analysis, and settings.</p>
+            </div>
+
+            <div class="admin-user-card">
+                <span class="admin-user-label">Signed in as</span>
+                <strong id="admin-user-name">Super Admin</strong>
+                <span id="admin-user-email" class="admin-user-email">damayojholmer@gmail.com</span>
+                <span id="admin-user-role" class="admin-role-badge">Super Admin</span>
+            </div>
+
+            <nav class="admin-nav" aria-label="Admin Sections">
+                <button class="admin-nav-btn active" type="button" data-section="dashboard">Dashboard</button>
+                <button class="admin-nav-btn" type="button" data-section="products">Products</button>
+                <button class="admin-nav-btn" type="button" data-section="orders">Orders</button>
+                <button class="admin-nav-btn" type="button" data-section="analysis">Analysis</button>
+                <button class="admin-nav-btn" type="button" data-section="settings">Settings</button>
+            </nav>
+
+            <div class="admin-sidebar-actions">
+                <button id="admin-open-storefront" type="button" class="auth-secondary-btn">Open Storefront</button>
+                <button id="admin-signout-btn" type="button" class="auth-submit-btn">Sign Out</button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div>
+                    <p id="admin-page-kicker" class="admin-page-kicker">Dashboard</p>
+                    <h1 id="admin-page-title" class="admin-page-title">Store Overview</h1>
+                    <p id="admin-page-subtitle" class="admin-page-subtitle">Track the live state of RM Clothing in one place.</p>
+                </div>
+            </header>
+
+            <section class="admin-panel active" data-panel="dashboard">
+                <div id="admin-dashboard-stats" class="admin-stats-grid"></div>
+                <div class="admin-split-grid">
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Recent Orders</h3>
+                            <span>Live storefront checkouts</span>
+                        </div>
+                        <div id="admin-dashboard-orders"></div>
+                    </article>
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Category Snapshot</h3>
+                            <span>Current catalog distribution</span>
+                        </div>
+                        <div id="admin-dashboard-categories"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="admin-panel" data-panel="products">
+                <article class="admin-surface">
+                    <div class="admin-surface-head">
+                        <h3>Product Catalog</h3>
+                        <span>Current storefront items</span>
+                    </div>
+                    <div id="admin-products-grid" class="admin-products-grid"></div>
+                </article>
+            </section>
+
+            <section class="admin-panel" data-panel="orders">
+                <article class="admin-surface">
+                    <div class="admin-surface-head">
+                        <h3>Order Queue</h3>
+                        <span>Stored buyer notifications from checkout</span>
+                    </div>
+                    <div id="admin-orders-list"></div>
+                </article>
+            </section>
+
+            <section class="admin-panel" data-panel="analysis">
+                <div id="admin-analysis-stats" class="admin-stats-grid"></div>
+                <div class="admin-split-grid">
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Best Sellers</h3>
+                            <span>Top products by quantity sold</span>
+                        </div>
+                        <div id="admin-best-sellers"></div>
+                    </article>
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Revenue by Category</h3>
+                            <span>Order totals grouped by catalog category</span>
+                        </div>
+                        <div id="admin-category-analysis"></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="admin-panel" data-panel="settings">
+                <div class="admin-split-grid admin-settings-grid">
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Account Settings</h3>
+                            <span>Current admin session details</span>
+                        </div>
+                        <div id="admin-settings-details"></div>
+                    </article>
+                    <article class="admin-surface">
+                        <div class="admin-surface-head">
+                            <h3>Access Notes</h3>
+                            <span>Admin route and environment status</span>
+                        </div>
+                        <div id="admin-settings-notes"></div>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

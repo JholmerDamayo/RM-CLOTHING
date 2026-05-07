@@ -29,6 +29,8 @@ const AUTH_VIEW_COPY = {
     }
 };
 
+const BUYER_NOTIFICATIONS_STORAGE_KEY = 'rm-clothing-buyer-notifications';
+
 let cart = [];
 let buyerNotifications = [];
 let activeProductSelection = null;
@@ -42,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initApp() {
+    buyerNotifications = loadBuyerNotifications();
     initAuthUI();
 
     if (window.renderProducts) window.renderProducts();
@@ -71,6 +74,33 @@ async function initApp() {
         }
     } catch (error) {
         console.warn('Unable to restore the Supabase session.', error);
+    }
+}
+
+function loadBuyerNotifications() {
+    try {
+        const raw = window.localStorage.getItem(BUYER_NOTIFICATIONS_STORAGE_KEY);
+        const notifications = JSON.parse(raw || '[]');
+
+        if (!Array.isArray(notifications)) {
+            return [];
+        }
+
+        return notifications.map((notification) => ({
+            ...notification,
+            createdAt: notification.createdAt ? new Date(notification.createdAt) : new Date()
+        }));
+    } catch (error) {
+        console.warn('Unable to load buyer notifications.', error);
+        return [];
+    }
+}
+
+function persistBuyerNotifications() {
+    try {
+        window.localStorage.setItem(BUYER_NOTIFICATIONS_STORAGE_KEY, JSON.stringify(buyerNotifications));
+    } catch (error) {
+        console.warn('Unable to save buyer notifications.', error);
     }
 }
 
@@ -780,6 +810,8 @@ function initProductModal() {
     const backdrop = document.getElementById('product-modal-backdrop');
     const addCartBtn = document.getElementById('modal-add-cart-btn');
     const checkoutBtn = document.getElementById('modal-checkout-btn');
+    const prevImageBtn = document.getElementById('product-modal-gallery-prev');
+    const nextImageBtn = document.getElementById('product-modal-gallery-next');
     const sizeButtons = document.querySelectorAll('.size-option');
 
     if (!closeBtn || !backdrop || !addCartBtn || !checkoutBtn) return;
@@ -807,6 +839,9 @@ function initProductModal() {
         checkoutActiveSelection();
     });
 
+    prevImageBtn?.addEventListener('click', () => changeProductModalImage(-1));
+    nextImageBtn?.addEventListener('click', () => changeProductModalImage(1));
+
     sizeButtons.forEach((button) => {
         button.addEventListener('click', () => {
             if (!activeProductSelection) return;
@@ -821,6 +856,17 @@ function initProductModal() {
             closeProductModal();
             closeCartSidebar();
             closeOrdersSidebar();
+            return;
+        }
+
+        if (!document.querySelector('.product-modal.open') || !activeProductSelection) return;
+
+        if (event.key === 'ArrowLeft') {
+            changeProductModalImage(-1);
+        }
+
+        if (event.key === 'ArrowRight') {
+            changeProductModalImage(1);
         }
     });
 }
@@ -851,17 +897,16 @@ window.openProductModal = function(productId, quantity = 1) {
     activeProductSelection = {
         productId,
         quantity: Math.max(1, quantity),
-        size: 'S'
+        size: 'S',
+        currentImageIndex: 0
     };
 
-    const image = document.getElementById('product-modal-image');
     const title = document.getElementById('product-modal-title');
     const description = document.getElementById('product-modal-description');
     const price = document.getElementById('product-modal-price');
     const quantityLabel = document.getElementById('product-modal-quantity');
 
-    image.src = product.image;
-    image.alt = product.name;
+    renderProductModalImage();
     title.textContent = product.name;
     description.textContent = product.description;
     price.textContent = formatMoney(product.price);
@@ -888,6 +933,64 @@ function renderSizeSelection() {
     document.querySelectorAll('.size-option').forEach((button) => {
         button.classList.toggle('selected', button.dataset.size === activeProductSelection?.size);
     });
+}
+
+function getProductImages(product) {
+    if (!product) return [];
+
+    if (Array.isArray(product.images) && product.images.length > 0) {
+        return product.images;
+    }
+
+    return product.image ? [product.image] : [];
+}
+
+function getPrimaryProductImage(product) {
+    return getProductImages(product)[0] || '';
+}
+
+function renderProductModalImage() {
+    if (!activeProductSelection) return;
+
+    const product = findProduct(activeProductSelection.productId);
+    const image = document.getElementById('product-modal-image');
+    const media = document.querySelector('.product-modal-media');
+    const prevBtn = document.getElementById('product-modal-gallery-prev');
+    const nextBtn = document.getElementById('product-modal-gallery-next');
+    const status = document.getElementById('product-modal-gallery-status');
+
+    if (!product || !image || !media || !prevBtn || !nextBtn || !status) return;
+
+    const images = getProductImages(product);
+    const lastIndex = Math.max(0, images.length - 1);
+    const currentIndex = Math.min(activeProductSelection.currentImageIndex || 0, lastIndex);
+    const hasMultipleImages = images.length > 1;
+
+    activeProductSelection.currentImageIndex = currentIndex;
+    image.src = images[currentIndex] || '';
+    image.alt = hasMultipleImages
+        ? `${product.name} image ${currentIndex + 1}`
+        : product.name;
+
+    media.classList.toggle('has-gallery', hasMultipleImages);
+    prevBtn.hidden = !hasMultipleImages || currentIndex === 0;
+    nextBtn.hidden = !hasMultipleImages || currentIndex === lastIndex;
+    status.hidden = !hasMultipleImages;
+    status.textContent = hasMultipleImages ? `${currentIndex + 1} / ${images.length}` : '';
+}
+
+function changeProductModalImage(direction) {
+    if (!activeProductSelection) return;
+
+    const product = findProduct(activeProductSelection.productId);
+    const images = getProductImages(product);
+    if (images.length <= 1) return;
+
+    const nextIndex = activeProductSelection.currentImageIndex + direction;
+    if (nextIndex < 0 || nextIndex >= images.length) return;
+
+    activeProductSelection.currentImageIndex = nextIndex;
+    renderProductModalImage();
 }
 
 // CART DATA
@@ -923,7 +1026,7 @@ function buildLineItem(productId, quantity, size) {
         cartKey: `${product.id}-${size}`,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: getPrimaryProductImage(product),
         quantity: Math.max(1, quantity),
         size
     };
@@ -1046,6 +1149,7 @@ function createBuyerNotification(items) {
         createdAt: new Date()
     });
 
+    persistBuyerNotifications();
     updateBuyerUI();
 }
 
@@ -1065,6 +1169,7 @@ window.cancelOrder = function(notificationId) {
     }
 
     buyerNotifications = buyerNotifications.filter((notification) => notification.id !== notificationId);
+    persistBuyerNotifications();
     updateBuyerUI();
 };
 
