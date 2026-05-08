@@ -1143,6 +1143,11 @@ function createBuyerNotification(items) {
 
     buyerNotifications.unshift({
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        customer: {
+            name: currentUser?.name || 'Customer',
+            email: currentUser?.email || 'No email provided',
+            phone: currentUser?.phone || currentUser?.phoneNumber || 'Not provided'
+        },
         items,
         totalItems,
         totalAmount,
