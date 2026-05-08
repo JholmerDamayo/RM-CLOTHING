@@ -6,6 +6,7 @@ import {
     signUpWithSupabase,
     verifySignupCodeWithSupabase
 } from './supabase.js';
+import { PRODUCT_STORAGE_KEYS } from './products.js';
 
 /**
  * Core Application Script for Elysian Luxe
@@ -49,6 +50,7 @@ async function initApp() {
 
     if (window.renderProducts) window.renderProducts();
 
+    initCatalogSync();
     initCartUI();
     initOrdersUI();
     initProductModal();
@@ -1235,18 +1237,43 @@ function updateBuyerUI() {
 // FILTERS
 function initFilters() {
     const filterBtns = document.querySelectorAll('.filter-btn');
+    const searchForm = document.getElementById('collection-search-form');
+    const searchInput = document.getElementById('collection-search-input');
 
     filterBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             filterBtns.forEach((button) => button.classList.remove('active'));
             btn.classList.add('active');
-
-            if (window.renderProducts) {
-                window.renderProducts(btn.dataset.filter);
-            }
-
-            if (window.initScrollRevel) window.initScrollRevel();
+            applyActiveCatalogFilters();
         });
+    });
+
+    searchForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        applyActiveCatalogFilters();
+    });
+
+    searchInput?.addEventListener('input', () => {
+        applyActiveCatalogFilters();
+    });
+}
+
+function applyActiveCatalogFilters() {
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    const searchTerm = document.getElementById('collection-search-input')?.value.trim() || '';
+
+    if (window.renderProducts) {
+        window.renderProducts(activeFilter, searchTerm);
+    }
+
+    if (window.initScrollRevel) window.initScrollRevel();
+}
+
+function initCatalogSync() {
+    window.addEventListener('storage', (event) => {
+        if (PRODUCT_STORAGE_KEYS.includes(event.key)) {
+            applyActiveCatalogFilters();
+        }
     });
 }
 

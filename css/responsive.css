@@ -42,11 +42,20 @@
     .hero-subtitle { font-size: 1rem; }
     
     .product-grid { grid-template-columns: 1fr; }
-    
+
+    .section-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
     .filter-controls {
         overflow-x: auto;
         padding-bottom: 10px;
         white-space: nowrap;
+    }
+
+    .collection-search {
+        width: 100%;
     }
 
     .nav-actions {

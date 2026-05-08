@@ -4,11 +4,22 @@ import {
     signInWithSupabase,
     signOutFromSupabase
 } from './supabase.js';
-import { products } from './products.js';
+import {
+    PRODUCT_STORAGE_KEYS,
+    addCustomProduct,
+    deleteProduct,
+    getProducts,
+    updateProduct
+} from './products.js';
 
 const BUYER_NOTIFICATIONS_STORAGE_KEY = 'rm-clothing-buyer-notifications';
 const ADMIN_LOCAL_SESSION_KEY = 'rm-clothing-admin-console-session';
 const ADMIN_LOCAL_MODE_KEY = 'rm-clothing-admin-console-mode';
+const ADMIN_ACCESS_LIST_STORAGE_KEY = 'rm-clothing-admin-access-list';
+const ADMIN_ACCESS_REQUESTS_STORAGE_KEY = 'rm-clothing-admin-access-requests';
+const DEFAULT_ADMIN_AVATAR_URL = 'https://scontent-mnl1-2.xx.fbcdn.net/v/t39.30808-6/688293196_122100700785295875_5834459644778230756_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=1d70fc&_nc_eui2=AeGrTZf6B_9abE9ISQJzyNtG-vbx7DaVTTT69vHsNpVNNAP4T_XN6BEWu04aMVNQBMW6SVOCBedyi6K3s7NM0t65&_nc_ohc=2arVinEpVjIQ7kNvwH--YuB&_nc_oc=AdoRv5cXl-QuWt6yW4FanoqWQ3xOmk73bBsTMEO5AKgZ3XioeyZth4Gkk6-Ym9CVLTM&_nc_zt=23&_nc_ht=scontent-mnl1-2.xx&_nc_gid=TGYzw9MkmfkGnSzRkPDSfQ&_nc_ss=7b2a8&oh=00_Af5GVJA9y_U62XcEN7MZr2tJ5pFaNiWuW7WE4gVmbK76aw&oe=6A009234';
+const ALLOWED_ITEM_IMAGE_TYPES = new Set(['image/png', 'image/jpeg']);
+const MAX_ITEM_IMAGES = 2;
 const ADMIN_SECTIONS = {
     dashboard: {
         kicker: 'Dashboard',
@@ -33,7 +44,7 @@ const ADMIN_SECTIONS = {
     settings: {
         kicker: 'Settings',
         title: 'Admin Settings',
-        subtitle: 'Review session details, route information, and environment status.'
+        subtitle: 'Review session details, add admins, and manage admin join requests.'
     }
 };
 const SEEDED_SUPER_ADMIN = {
@@ -48,6 +59,8 @@ let adminSession = null;
 let adminSource = '';
 let activeSection = 'dashboard';
 let selectedOrderId = '';
+let editingProductId = null;
+let editingProductImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     void initAdminApp();
@@ -69,10 +82,12 @@ async function initAdminApp() {
 
     try {
         const restored = await restoreSupabaseUser();
-        if (restored?.currentUser?.role === 'admin') {
-            adminUser = normalizeSupabaseAdmin(restored.currentUser);
+        const approvedAdmin = getApprovedAdminByEmail(restored?.currentUser?.email);
+
+        if (restored?.currentUser?.role === 'admin' || approvedAdmin) {
+            adminUser = normalizeSupabaseAdmin(restored.currentUser, approvedAdmin);
             adminSession = restored.session;
-            adminSource = 'supabase';
+            adminSource = approvedAdmin ? 'local-access' : 'supabase';
         }
     } catch (error) {
         console.warn('Unable to restore admin session.', error);
@@ -86,6 +101,22 @@ function initAdminEvents() {
         event.preventDefault();
         void handleAdminLogin();
     });
+    document.getElementById('admin-request-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        handleAdminAccessRequest();
+    });
+    document.getElementById('admin-add-admin-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        handleAddAdmin();
+    });
+    document.getElementById('admin-item-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        handleAddItem();
+    });
+    document.getElementById('admin-edit-item-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        handleEditItemSubmit();
+    });
 
     document.getElementById('admin-signout-btn')?.addEventListener('click', () => {
         void logoutAdmin();
@@ -93,6 +124,8 @@ function initAdminEvents() {
 
     document.getElementById('admin-open-storefront')?.addEventListener('click', openStorefront);
     document.getElementById('admin-open-storefront-auth')?.addEventListener('click', openStorefront);
+    document.getElementById('admin-toggle-request-form')?.addEventListener('click', toggleAdminRequestForm);
+    document.getElementById('admin-toggle-item-form')?.addEventListener('click', toggleAdminItemForm);
 
     document.querySelectorAll('.admin-nav-btn').forEach((button) => {
         button.addEventListener('click', () => {
@@ -100,11 +133,13 @@ function initAdminEvents() {
         });
     });
 
+    initAdminItemModal();
+
     document.getElementById('admin-console')?.addEventListener('click', (event) => {
         const button = event.target.closest('[data-admin-action]');
         if (!button) return;
 
-        const { adminAction, orderId = '' } = button.dataset;
+        const { adminAction, orderId = '', requestId = '', productId = '' } = button.dataset;
 
         if (adminAction === 'view-order') {
             selectedOrderId = orderId;
@@ -114,14 +149,319 @@ function initAdminEvents() {
 
         if (adminAction === 'delete-order') {
             deleteOrder(orderId);
+            return;
+        }
+
+        if (adminAction === 'approve-access-request') {
+            approveAdminAccessRequest(requestId);
+            return;
+        }
+
+        if (adminAction === 'reject-access-request') {
+            rejectAdminAccessRequest(requestId);
+            return;
+        }
+
+        if (adminAction === 'toggle-item-menu') {
+            toggleItemMenu(productId);
+            return;
+        }
+
+        if (adminAction === 'edit-item') {
+            closeItemMenus();
+            openEditItemModal(productId);
+            return;
+        }
+
+        if (adminAction === 'delete-item') {
+            closeItemMenus();
+            handleDeleteItem(productId);
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.admin-item-menu')) {
+            closeItemMenus();
         }
     });
 
     window.addEventListener('storage', (event) => {
-        if (event.key === BUYER_NOTIFICATIONS_STORAGE_KEY && adminUser) {
+        if (
+            adminUser &&
+            [
+                BUYER_NOTIFICATIONS_STORAGE_KEY,
+                ADMIN_ACCESS_LIST_STORAGE_KEY,
+                ADMIN_ACCESS_REQUESTS_STORAGE_KEY
+            ].includes(event.key)
+        ) {
+            renderAdminViews();
+        }
+
+        if (adminUser && PRODUCT_STORAGE_KEYS.includes(event.key)) {
             renderAdminViews();
         }
     });
+}
+
+function initAdminItemModal() {
+    document.getElementById('admin-item-modal-close')?.addEventListener('click', () => {
+        closeAdminItemModal();
+    });
+    document.getElementById('admin-item-modal-backdrop')?.addEventListener('click', () => {
+        closeAdminItemModal();
+    });
+    document.getElementById('admin-edit-item-upload')?.addEventListener('change', (event) => {
+        void handleEditItemUpload(event);
+    });
+    document.getElementById('admin-edit-item-images')?.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('[data-remove-image-index]');
+        if (!removeButton) return;
+
+        removeEditItemImage(Number(removeButton.dataset.removeImageIndex));
+    });
+
+    window.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+
+        closeItemMenus();
+        closeAdminItemModal();
+    });
+}
+
+function openEditItemModal(productId) {
+    const product = findCatalogProduct(productId);
+    const modal = document.getElementById('admin-item-modal');
+    const nameInput = document.getElementById('admin-edit-item-name');
+    const priceInput = document.getElementById('admin-edit-item-price');
+
+    if (!product || !modal || !nameInput || !priceInput) return;
+
+    editingProductId = product.id;
+    editingProductImages = getProductImages(product).slice(0, MAX_ITEM_IMAGES);
+    nameInput.value = product.name;
+    priceInput.value = String(Number(product.price || 0));
+    setEditItemFeedback('', '');
+    renderEditItemImages();
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('admin-modal-open');
+    nameInput.focus();
+    nameInput.select();
+}
+
+function closeAdminItemModal() {
+    const modal = document.getElementById('admin-item-modal');
+    const form = document.getElementById('admin-edit-item-form');
+    const uploadInput = document.getElementById('admin-edit-item-upload');
+
+    if (!modal) return;
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('admin-modal-open');
+
+    editingProductId = null;
+    editingProductImages = [];
+    setEditItemFeedback('', '');
+    form?.reset();
+
+    if (uploadInput) {
+        uploadInput.value = '';
+    }
+}
+
+function renderEditItemImages() {
+    const container = document.getElementById('admin-edit-item-images');
+    if (!container) return;
+
+    if (!editingProductImages.length) {
+        container.innerHTML = `
+            <div class="admin-edit-item-empty">
+                <strong>No image selected</strong>
+                <span>Upload a PNG or JPEG so this product keeps its storefront preview.</span>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = editingProductImages.map((image, index) => `
+        <article class="admin-edit-item-image-card ${index === 0 ? 'is-primary' : ''}">
+            <button
+                class="admin-edit-item-image-remove"
+                type="button"
+                data-remove-image-index="${index}"
+                aria-label="Remove product image ${index + 1}"
+            >
+                &times;
+            </button>
+            <img src="${escapeHtml(image)}" alt="Product image ${index + 1}">
+            <div class="admin-edit-item-image-meta">
+                <strong>${index === 0 ? 'Primary Image' : `Image ${index + 1}`}</strong>
+            </div>
+        </article>
+    `).join('');
+}
+
+async function handleEditItemUpload(event) {
+    const input = event.currentTarget;
+    const file = input?.files?.[0];
+
+    if (!file) return;
+
+    if (!ALLOWED_ITEM_IMAGE_TYPES.has(file.type)) {
+        setEditItemFeedback('Only PNG and JPEG images are allowed here.', 'error');
+        input.value = '';
+        return;
+    }
+
+    if (editingProductImages.length >= MAX_ITEM_IMAGES) {
+        setEditItemFeedback(`You can keep up to ${MAX_ITEM_IMAGES} product images in this editor.`, 'error');
+        input.value = '';
+        return;
+    }
+
+    try {
+        const imageSource = await readFileAsDataUrl(file);
+        editingProductImages = [...editingProductImages, imageSource];
+        renderEditItemImages();
+        setEditItemFeedback(`${file.name} is ready to save.`, 'success');
+    } catch (error) {
+        setEditItemFeedback(error.message || 'Unable to read that image file right now.', 'error');
+    } finally {
+        input.value = '';
+    }
+}
+
+function removeEditItemImage(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= editingProductImages.length) return;
+
+    editingProductImages = editingProductImages.filter((_, imageIndex) => imageIndex !== index);
+    renderEditItemImages();
+
+    if (!editingProductImages.length) {
+        setEditItemFeedback('Upload a new PNG or JPEG before saving this item.', 'error');
+        return;
+    }
+
+    setEditItemFeedback('Image removed. Save the product when you are ready.', '');
+}
+
+function handleEditItemSubmit() {
+    const name = document.getElementById('admin-edit-item-name')?.value.trim() ?? '';
+    const price = Number(document.getElementById('admin-edit-item-price')?.value ?? 0);
+
+    if (!editingProductId) {
+        setEditItemFeedback('Pick a product to edit first.', 'error');
+        return;
+    }
+
+    if (!name) {
+        setEditItemFeedback('Item name is required.', 'error');
+        return;
+    }
+
+    if (!Number.isFinite(price) || price < 0) {
+        setEditItemFeedback('Enter a valid item price.', 'error');
+        return;
+    }
+
+    if (!editingProductImages.length) {
+        setEditItemFeedback('Add at least one PNG or JPEG image before saving.', 'error');
+        return;
+    }
+
+    try {
+        const updatedProduct = updateProduct(editingProductId, {
+            name,
+            price,
+            images: editingProductImages
+        });
+
+        renderAdminViews();
+        setInlineFeedback('admin-item-feedback', `${updatedProduct.name} was updated successfully.`, 'success');
+        closeAdminItemModal();
+    } catch (error) {
+        setEditItemFeedback(error.message || 'Unable to save the item right now.', 'error');
+    }
+}
+
+function handleDeleteItem(productId) {
+    const product = findCatalogProduct(productId);
+    if (!product) return;
+
+    const confirmed = window.confirm(`Delete "${product.name}" from the item catalog?`);
+    if (!confirmed) return;
+
+    try {
+        deleteProduct(product.id);
+
+        if (editingProductId === product.id) {
+            closeAdminItemModal();
+        }
+
+        renderAdminViews();
+        setInlineFeedback('admin-item-feedback', `${product.name} was removed from the catalog.`, 'success');
+    } catch (error) {
+        setInlineFeedback('admin-item-feedback', error.message || 'Unable to delete the item right now.', 'error');
+    }
+}
+
+function toggleItemMenu(productId) {
+    const target = document.querySelector(`.admin-item-menu[data-product-id="${Number(productId)}"]`);
+    const shouldOpen = Boolean(target && !target.classList.contains('is-open'));
+
+    closeItemMenus();
+
+    if (shouldOpen) {
+        target.classList.add('is-open');
+    }
+}
+
+function closeItemMenus() {
+    document.querySelectorAll('.admin-item-menu.is-open').forEach((menu) => {
+        menu.classList.remove('is-open');
+    });
+}
+
+function findCatalogProduct(productId) {
+    const normalizedId = Number(productId);
+    return getProducts().find((product) => product.id === normalizedId) || null;
+}
+
+async function readFileAsDataUrl(file) {
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const result = String(reader.result || '').trim();
+            if (!result) {
+                reject(new Error('The selected image is empty.'));
+                return;
+            }
+
+            resolve(result);
+        };
+
+        reader.onerror = () => {
+            reject(new Error('Unable to read the selected image.'));
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+function setEditItemFeedback(message, state = '') {
+    const feedback = document.getElementById('admin-edit-item-feedback');
+    if (!feedback) return;
+
+    feedback.textContent = message;
+
+    if (state) {
+        feedback.dataset.state = state;
+    } else {
+        delete feedback.dataset.state;
+    }
 }
 
 async function handleAdminLogin() {
@@ -140,15 +480,16 @@ async function handleAdminLogin() {
     setAdminFeedback('Signing you in...', '');
 
     const isSeededSuperAdmin = email === SEEDED_SUPER_ADMIN.email && password === SEEDED_SUPER_ADMIN.password;
+    const approvedAdmin = getApprovedAdminByEmail(email);
 
     if (hasSupabaseConfig()) {
         try {
             const authResult = await signInWithSupabase({ email, password, rememberMe });
 
-            if (authResult.currentUser?.role === 'admin') {
-                adminUser = normalizeSupabaseAdmin(authResult.currentUser);
+            if (authResult.currentUser?.role === 'admin' || approvedAdmin) {
+                adminUser = normalizeSupabaseAdmin(authResult.currentUser, approvedAdmin);
                 adminSession = authResult.session;
-                adminSource = 'supabase';
+                adminSource = approvedAdmin ? 'local-access' : 'supabase';
                 clearLocalAdminSession();
                 finishAdminLogin(`Welcome back, ${getFirstName(adminUser.name)}.`);
                 return;
@@ -195,7 +536,7 @@ function finishAdminLogin(message) {
 }
 
 async function logoutAdmin() {
-    if (adminSource === 'supabase' && adminSession?.access_token) {
+    if (adminSession?.access_token) {
         try {
             await signOutFromSupabase(adminSession.access_token);
         } catch (error) {
@@ -226,9 +567,7 @@ function renderAdminState() {
     }
 
     document.getElementById('admin-user-name').textContent = adminUser.name;
-    document.getElementById('admin-user-email').textContent = adminUser.email;
-    document.getElementById('admin-user-role').textContent = formatRole(adminUser.role);
-    document.getElementById('admin-user-avatar').textContent = getAvatarLetters(adminUser.name);
+    document.getElementById('admin-user-avatar').src = getAdminAvatarUrl(adminUser);
     document.getElementById('admin-hero-date').textContent = formatLongDate(new Date());
 
     switchAdminSection(activeSection);
@@ -236,13 +575,13 @@ function renderAdminState() {
 }
 
 function renderAdminViews() {
+    const currentProducts = getProducts();
     const orders = loadBuyerNotifications();
     ensureSelectedOrder(orders);
-    updateHeroSummary(orders);
-    renderDashboard(products, orders);
-    renderItemsPanel(products, orders);
+    renderDashboard(currentProducts, orders);
+    renderItemsPanel(currentProducts, orders);
     renderOrdersPanel(orders);
-    renderAnalysisPanel(products, orders);
+    renderAnalysisPanel(currentProducts, orders);
     renderSettingsPanel(orders);
 }
 
@@ -265,11 +604,7 @@ function switchAdminSection(section) {
 }
 
 function updateHeroSummary(orders) {
-    const chip = document.getElementById('admin-hero-chip');
-    if (!chip) return;
-
-    const customerCount = getUniqueCustomersCount(orders);
-    chip.textContent = `${orders.length} orders | ${customerCount} customers`;
+    return orders;
 }
 
 function renderDashboard(currentProducts, orders) {
@@ -344,20 +679,41 @@ function renderItemsPanel(currentProducts, orders) {
     if (!container) return;
 
     container.innerHTML = currentProducts.map((product) => {
-        const sold = getSoldQuantityForProduct(product.name, orders);
-        const revenue = getRevenueForProduct(product.name, orders);
-        const images = Array.isArray(product.images) ? product.images.length : 1;
-        const primaryImage = Array.isArray(product.images) && product.images.length ? product.images[0] : product.image;
+        const sold = getSoldQuantityForProduct(product, orders);
+        const revenue = getRevenueForProduct(product, orders);
+        const images = getProductImages(product);
+        const primaryImage = images[0] || '';
 
         return `
             <article class="admin-item-card">
+                <div class="admin-item-menu" data-product-id="${product.id}">
+                    <button
+                        class="admin-item-menu-trigger"
+                        type="button"
+                        data-admin-action="toggle-item-menu"
+                        data-product-id="${product.id}"
+                        aria-label="Open item actions for ${escapeHtml(product.name)}"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="admin-item-menu-sheet">
+                        <button class="admin-item-menu-action" type="button" data-admin-action="edit-item" data-product-id="${product.id}">
+                            Edit
+                        </button>
+                        <button class="admin-item-menu-action is-danger" type="button" data-admin-action="delete-item" data-product-id="${product.id}">
+                            Delete
+                        </button>
+                    </div>
+                </div>
                 <div class="admin-item-media">
-                    <img src="${primaryImage}" alt="${escapeHtml(product.name)}">
+                    <img src="${escapeHtml(primaryImage)}" alt="${escapeHtml(product.name)}">
                 </div>
                 <div class="admin-item-body">
                     <div class="admin-item-topline">
                         <span class="admin-pill">${escapeHtml(formatCategory(product.category))}</span>
-                        <span class="admin-muted-text">${images} image${images === 1 ? '' : 's'}</span>
+                        <span class="admin-muted-text">${images.length} image${images.length === 1 ? '' : 's'}</span>
                     </div>
                     <h3>${escapeHtml(product.name)}</h3>
                     <p>${escapeHtml(product.description)}</p>
@@ -480,15 +836,19 @@ function renderAnalysisPanel(currentProducts, orders) {
 function renderSettingsPanel(orders) {
     const details = document.getElementById('admin-settings-details');
     const notes = document.getElementById('admin-settings-notes');
+    const adminList = document.getElementById('admin-admin-list');
+    const requestList = document.getElementById('admin-access-requests');
+    const approvedAdmins = getApprovedAdmins();
+    const accessRequests = getAdminAccessRequests();
 
     if (details) {
         details.innerHTML = [
             ['Admin Name', adminUser?.name || '-'],
             ['Email', adminUser?.email || '-'],
             ['Access Role', formatRole(adminUser?.role || 'admin')],
-            ['Session Source', adminSource === 'supabase' ? 'Supabase Admin' : 'Seeded Super Admin'],
+            ['Session Source', formatAdminSource(adminSource)],
             ['Orders Stored', orders.length.toString()],
-            ['Storefront Route', '/']
+            ['Approved Admins', approvedAdmins.length.toString()]
         ].map(([label, value]) => `
             <div class="admin-detail-row">
                 <span>${escapeHtml(label)}</span>
@@ -502,9 +862,19 @@ function renderSettingsPanel(orders) {
             `Admin login route: /admin/`,
             `Supabase config: ${hasSupabaseConfig() ? 'Connected' : 'Not configured'}`,
             `Seeded super admin email: ${SEEDED_SUPER_ADMIN.email}`,
+            `Pending join requests: ${accessRequests.length}`,
             'Dashboard data comes from saved storefront checkout notifications.',
-            'Phone values stay "Not provided" until the storefront starts collecting them.'
+            'Phone values stay "Not provided" until the storefront starts collecting them.',
+            'Locally approved admins still need a valid customer account password to sign in.'
         ].map((note) => `<p class="admin-note">${escapeHtml(note)}</p>`).join('');
+    }
+
+    if (adminList) {
+        adminList.innerHTML = renderAdminDirectory(approvedAdmins);
+    }
+
+    if (requestList) {
+        requestList.innerHTML = renderAdminRequests(accessRequests);
     }
 }
 
@@ -647,6 +1017,98 @@ function deleteOrder(orderId) {
     renderAdminViews();
 }
 
+function toggleAdminRequestForm() {
+    const form = document.getElementById('admin-request-form');
+    if (!form) return;
+
+    form.hidden = !form.hidden;
+}
+
+function toggleAdminItemForm() {
+    const shell = document.getElementById('admin-item-form-shell');
+    if (!shell) return;
+
+    shell.hidden = !shell.hidden;
+}
+
+function handleAdminAccessRequest() {
+    const name = document.getElementById('admin-request-name')?.value.trim() ?? '';
+    const email = document.getElementById('admin-request-email')?.value.trim().toLowerCase() ?? '';
+    const reason = document.getElementById('admin-request-reason')?.value.trim() ?? '';
+
+    if (!name || !isValidEmail(email) || !reason) {
+        setInlineFeedback('admin-request-feedback', 'Complete your name, email, and reason before sending the request.', 'error');
+        return;
+    }
+
+    createAdminAccessRequest({ name, email, reason });
+    document.getElementById('admin-request-form')?.reset();
+    document.getElementById('admin-request-form')?.setAttribute('hidden', '');
+    setInlineFeedback('admin-request-feedback', 'Your admin access request was sent for review.', 'success');
+}
+
+function handleAddAdmin() {
+    const name = document.getElementById('admin-access-name')?.value.trim() ?? '';
+    const email = document.getElementById('admin-access-email')?.value.trim().toLowerCase() ?? '';
+
+    if (!name || !isValidEmail(email)) {
+        setInlineFeedback('admin-admin-feedback', 'Enter a valid admin name and email address.', 'error');
+        return;
+    }
+
+    saveApprovedAdmin({ name, email, source: 'manual' });
+    clearRequestByEmail(email);
+    document.getElementById('admin-add-admin-form')?.reset();
+    setInlineFeedback('admin-admin-feedback', `${name} can now use this admin console after signing in.`, 'success');
+    renderAdminViews();
+}
+
+function handleAddItem() {
+    const name = document.getElementById('admin-item-name')?.value.trim() ?? '';
+    const price = Number(document.getElementById('admin-item-price')?.value ?? 0);
+    const category = document.getElementById('admin-item-category')?.value ?? 'tshirts';
+    const image = document.getElementById('admin-item-image')?.value.trim() ?? '';
+    const imageAlt = document.getElementById('admin-item-image-alt')?.value.trim() ?? '';
+    const description = document.getElementById('admin-item-description')?.value.trim() ?? '';
+
+    if (!name || !description || !image || !Number.isFinite(price) || price < 0) {
+        setInlineFeedback('admin-item-feedback', 'Fill in the item name, price, image, and description before saving.', 'error');
+        return;
+    }
+
+    try {
+        addCustomProduct({ name, price, category, image, imageAlt, description });
+        document.getElementById('admin-item-form')?.reset();
+        setInlineFeedback('admin-item-feedback', `${name} was added to the catalog.`, 'success');
+        renderAdminViews();
+    } catch (error) {
+        setInlineFeedback('admin-item-feedback', error.message || 'Unable to save the item right now.', 'error');
+    }
+}
+
+function approveAdminAccessRequest(requestId) {
+    const request = getAdminAccessRequests().find((entry) => entry.id === requestId);
+    if (!request) return;
+
+    saveApprovedAdmin({
+        name: request.name,
+        email: request.email,
+        source: 'request'
+    });
+    removeAdminAccessRequest(requestId);
+    setInlineFeedback('admin-admin-feedback', `${request.name} was added as an admin.`, 'success');
+    renderAdminViews();
+}
+
+function rejectAdminAccessRequest(requestId) {
+    const request = getAdminAccessRequests().find((entry) => entry.id === requestId);
+    if (!request) return;
+
+    removeAdminAccessRequest(requestId);
+    setInlineFeedback('admin-admin-feedback', `${request.name}'s request was removed.`, 'success');
+    renderAdminViews();
+}
+
 function ensureSelectedOrder(orders) {
     if (!orders.length) {
         selectedOrderId = '';
@@ -682,12 +1144,13 @@ function getBestSellers(orders) {
 }
 
 function getCategoryRevenueBreakdown(currentProducts, orders) {
+    const categoryByProductId = new Map(currentProducts.map((product) => [product.id, product.category]));
     const categoryByProductName = new Map(currentProducts.map((product) => [product.name, product.category]));
     const totals = new Map();
 
     orders.forEach((order) => {
         order.items.forEach((item) => {
-            const category = categoryByProductName.get(item.name) || 'uncategorized';
+            const category = categoryByProductId.get(Number(item.id)) || categoryByProductName.get(item.name) || 'uncategorized';
             const revenue = Number(item.price || 0) * Number(item.quantity || 0);
             totals.set(category, (totals.get(category) || 0) + revenue);
         });
@@ -726,20 +1189,30 @@ function getUniqueCustomersCount(orders) {
     })).size;
 }
 
-function getSoldQuantityForProduct(productName, orders) {
+function getSoldQuantityForProduct(product, orders) {
     return orders.reduce((sum, order) => (
         sum + order.items
-            .filter((item) => item.name === productName)
+            .filter((item) => Number(item.id) === product.id || item.name === product.name)
             .reduce((itemSum, item) => itemSum + Number(item.quantity || 0), 0)
     ), 0);
 }
 
-function getRevenueForProduct(productName, orders) {
+function getRevenueForProduct(product, orders) {
     return orders.reduce((sum, order) => (
         sum + order.items
-            .filter((item) => item.name === productName)
+            .filter((item) => Number(item.id) === product.id || item.name === product.name)
             .reduce((itemSum, item) => itemSum + (Number(item.price || 0) * Number(item.quantity || 0)), 0)
     ), 0);
+}
+
+function getProductImages(product) {
+    if (!product) return [];
+
+    if (Array.isArray(product.images) && product.images.length) {
+        return product.images.filter(Boolean);
+    }
+
+    return product.image ? [product.image] : [];
 }
 
 function formatOrderItemsLabel(order) {
@@ -762,15 +1235,67 @@ function renderStackRows(rows, emptyMessage) {
     `).join('');
 }
 
+function renderAdminDirectory(admins) {
+    if (!admins.length) {
+        return '<p class="admin-empty-state">No extra admins added yet.</p>';
+    }
+
+    return admins.map((admin) => `
+        <div class="admin-stack-row">
+            <div class="admin-stack-row-copy">
+                <span>${escapeHtml(admin.name)}</span>
+                <p>${escapeHtml(admin.email)}</p>
+            </div>
+            <strong>${escapeHtml(admin.source === 'request' ? 'Approved Request' : 'Manual Add')}</strong>
+        </div>
+    `).join('');
+}
+
+function renderAdminRequests(requests) {
+    if (!requests.length) {
+        return '<p class="admin-empty-state">No pending admin join requests.</p>';
+    }
+
+    return requests.map((request) => `
+        <div class="admin-stack-row">
+            <div class="admin-stack-row-copy">
+                <span>${escapeHtml(request.name)}</span>
+                <p>${escapeHtml(request.email)}</p>
+                <p>${escapeHtml(request.reason)}</p>
+            </div>
+            <div class="admin-stack-row-actions">
+                <button
+                    class="admin-inline-btn"
+                    type="button"
+                    data-admin-action="approve-access-request"
+                    data-request-id="${request.id}"
+                >
+                    Approve
+                </button>
+                <button
+                    class="admin-icon-btn admin-icon-btn-danger"
+                    type="button"
+                    data-admin-action="reject-access-request"
+                    data-request-id="${request.id}"
+                    aria-label="Remove access request"
+                >
+                    ${trashIconMarkup()}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
 function canCancelOrder(order) {
     const createdAtTime = new Date(order.createdAt).getTime();
     const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
     return (Date.now() - createdAtTime) < twoDaysInMs;
 }
 
-function normalizeSupabaseAdmin(currentUser) {
+function normalizeSupabaseAdmin(currentUser, approvedAdmin = null) {
     return {
         ...currentUser,
+        name: approvedAdmin?.name || currentUser.name,
         role: currentUser.email === SEEDED_SUPER_ADMIN.email ? 'super_admin' : 'admin'
     };
 }
@@ -798,7 +1323,7 @@ function restoreLocalAdminSession() {
 
         adminUser = parsed;
         adminSession = null;
-        adminSource = 'seeded';
+        adminSource = parsed.source || 'seeded';
     } catch (error) {
         console.warn('Unable to restore local admin session.', error);
     }
@@ -822,6 +1347,114 @@ function getAdminSessionStorage(mode = 'local') {
     return mode === 'session' ? window.sessionStorage : window.localStorage;
 }
 
+function getApprovedAdmins() {
+    return readJsonArray(ADMIN_ACCESS_LIST_STORAGE_KEY)
+        .map((entry, index) => normalizeAdminEntry(entry, index))
+        .filter(Boolean);
+}
+
+function getApprovedAdminByEmail(email) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) return null;
+
+    return getApprovedAdmins().find((entry) => entry.email === normalizedEmail) || null;
+}
+
+function saveApprovedAdmin(admin) {
+    const existing = getApprovedAdmins();
+    const normalizedEmail = String(admin.email || '').trim().toLowerCase();
+    const nextEntry = normalizeAdminEntry({
+        id: existing.find((entry) => entry.email === normalizedEmail)?.id || `admin-${Date.now()}`,
+        name: admin.name,
+        email: normalizedEmail,
+        source: admin.source || 'manual',
+        createdAt: new Date().toISOString()
+    }, existing.length);
+
+    const filtered = existing.filter((entry) => entry.email !== normalizedEmail);
+    writeJsonArray(ADMIN_ACCESS_LIST_STORAGE_KEY, [...filtered, nextEntry]);
+}
+
+function getAdminAccessRequests() {
+    return readJsonArray(ADMIN_ACCESS_REQUESTS_STORAGE_KEY)
+        .map((entry, index) => normalizeAdminAccessRequest(entry, index))
+        .filter(Boolean);
+}
+
+function createAdminAccessRequest(request) {
+    const existing = getAdminAccessRequests();
+    const normalizedEmail = String(request.email || '').trim().toLowerCase();
+    const nextRequest = normalizeAdminAccessRequest({
+        id: existing.find((entry) => entry.email === normalizedEmail)?.id || `request-${Date.now()}`,
+        name: request.name,
+        email: normalizedEmail,
+        reason: request.reason,
+        createdAt: new Date().toISOString()
+    }, existing.length);
+
+    const filtered = existing.filter((entry) => entry.email !== normalizedEmail);
+    writeJsonArray(ADMIN_ACCESS_REQUESTS_STORAGE_KEY, [...filtered, nextRequest]);
+}
+
+function removeAdminAccessRequest(requestId) {
+    const nextRequests = getAdminAccessRequests().filter((entry) => entry.id !== requestId);
+    writeJsonArray(ADMIN_ACCESS_REQUESTS_STORAGE_KEY, nextRequests);
+}
+
+function clearRequestByEmail(email) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const nextRequests = getAdminAccessRequests().filter((entry) => entry.email !== normalizedEmail);
+    writeJsonArray(ADMIN_ACCESS_REQUESTS_STORAGE_KEY, nextRequests);
+}
+
+function readJsonArray(storageKey) {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(storageKey) || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.warn(`Unable to read ${storageKey}.`, error);
+        return [];
+    }
+}
+
+function writeJsonArray(storageKey, value) {
+    try {
+        window.localStorage.setItem(storageKey, JSON.stringify(value));
+    } catch (error) {
+        console.warn(`Unable to save ${storageKey}.`, error);
+    }
+}
+
+function normalizeAdminEntry(entry, index) {
+    const email = String(entry?.email || '').trim().toLowerCase();
+    if (!isValidEmail(email)) {
+        return null;
+    }
+
+    return {
+        id: String(entry?.id || `admin-${index}`),
+        name: String(entry?.name || email).trim(),
+        email,
+        source: entry?.source === 'request' ? 'request' : 'manual',
+        createdAt: entry?.createdAt || new Date().toISOString()
+    };
+}
+
+function normalizeAdminAccessRequest(entry, index) {
+    const email = String(entry?.email || '').trim().toLowerCase();
+    if (!isValidEmail(email)) {
+        return null;
+    }
+
+    return {
+        id: String(entry?.id || `request-${index}`),
+        name: String(entry?.name || email).trim(),
+        email,
+        reason: String(entry?.reason || 'No reason provided.').trim(),
+        createdAt: entry?.createdAt || new Date().toISOString()
+    };
+}
+
 function validateAdminEmail() {
     const value = document.getElementById('admin-login-email')?.value.trim() ?? '';
 
@@ -837,6 +1470,10 @@ function validateAdminEmail() {
 
     setAdminFieldMessage('admin-login-email-message', '');
     return true;
+}
+
+function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
 }
 
 function validateAdminPassword() {
@@ -880,6 +1517,18 @@ function clearAdminFieldMessages() {
     setAdminFieldMessage('admin-login-password-message', '');
 }
 
+function setInlineFeedback(id, message, state = '') {
+    const feedback = document.getElementById(id);
+    if (!feedback) return;
+
+    feedback.textContent = message;
+    if (state) {
+        feedback.dataset.state = state;
+    } else {
+        delete feedback.dataset.state;
+    }
+}
+
 function formatMoney(value) {
     return `PHP ${Number(value || 0).toLocaleString('en-PH', {
         minimumFractionDigits: 2,
@@ -912,6 +1561,12 @@ function formatRole(role) {
     return 'User';
 }
 
+function formatAdminSource(source) {
+    if (source === 'supabase') return 'Supabase Admin';
+    if (source === 'local-access') return 'Locally Approved Admin';
+    return 'Seeded Super Admin';
+}
+
 function formatCategory(category) {
     if (!category) return 'Uncategorized';
     return category.charAt(0).toUpperCase() + category.slice(1);
@@ -921,9 +1576,8 @@ function getFirstName(name) {
     return String(name || '').trim().split(/\s+/)[0] || 'Admin';
 }
 
-function getAvatarLetters(name) {
-    const parts = String(name || 'Admin').trim().split(/\s+/).slice(0, 2);
-    return parts.map((part) => part.charAt(0).toUpperCase()).join('') || 'AD';
+function getAdminAvatarUrl(user) {
+    return user?.avatarUrl || DEFAULT_ADMIN_AVATAR_URL;
 }
 
 function trashIconMarkup() {

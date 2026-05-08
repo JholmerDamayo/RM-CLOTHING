@@ -42,6 +42,29 @@
                         <button type="submit" class="auth-submit-btn">Login</button>
                         <button id="admin-open-storefront-auth" type="button" class="auth-secondary-btn">Open Storefront</button>
                     </form>
+                    <div class="admin-request-card">
+                        <div class="admin-request-card-copy">
+                            <strong>Need admin access?</strong>
+                            <span>Send your request so an existing admin can review it in Settings.</span>
+                        </div>
+                        <button id="admin-toggle-request-form" type="button" class="auth-secondary-btn">Request Access</button>
+                        <form id="admin-request-form" class="admin-request-form" hidden>
+                            <label class="auth-field">
+                                <span>Full Name</span>
+                                <input type="text" id="admin-request-name" autocomplete="name" required>
+                            </label>
+                            <label class="auth-field">
+                                <span>Email Address</span>
+                                <input type="email" id="admin-request-email" autocomplete="email" required>
+                            </label>
+                            <label class="auth-field">
+                                <span>Reason</span>
+                                <textarea id="admin-request-reason" rows="3" placeholder="Tell the admin why you need access." required></textarea>
+                            </label>
+                            <button type="submit" class="auth-submit-btn">Send Request</button>
+                        </form>
+                        <p id="admin-request-feedback" class="auth-feedback" aria-live="polite"></p>
+                    </div>
                     <p id="admin-auth-feedback" class="auth-feedback" aria-live="polite"></p>
                 </div>
             </div>
@@ -51,20 +74,17 @@
     <div id="admin-console" class="admin-console" hidden>
         <div class="admin-shell">
             <aside class="admin-sidebar">
-                <div class="admin-brand">
-                    <span class="admin-brand-mark">RM</span>
-                    <div>
-                        <p class="admin-brand-kicker">RM Clothing</p>
-                        <h2>Control Center</h2>
-                    </div>
-                </div>
-
                 <div class="admin-user-card">
-                    <div class="admin-avatar" id="admin-user-avatar">RM</div>
+                    <div class="admin-avatar">
+                        <img
+                            id="admin-user-avatar"
+                            class="admin-avatar-image"
+                            src="https://scontent-mnl1-2.xx.fbcdn.net/v/t39.30808-6/688293196_122100700785295875_5834459644778230756_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=1d70fc&_nc_eui2=AeGrTZf6B_9abE9ISQJzyNtG-vbx7DaVTTT69vHsNpVNNAP4T_XN6BEWu04aMVNQBMW6SVOCBedyi6K3s7NM0t65&_nc_ohc=2arVinEpVjIQ7kNvwH--YuB&_nc_oc=AdoRv5cXl-QuWt6yW4FanoqWQ3xOmk73bBsTMEO5AKgZ3XioeyZth4Gkk6-Ym9CVLTM&_nc_zt=23&_nc_ht=scontent-mnl1-2.xx&_nc_gid=TGYzw9MkmfkGnSzRkPDSfQ&_nc_ss=7b2a8&oh=00_Af5GVJA9y_U62XcEN7MZr2tJ5pFaNiWuW7WE4gVmbK76aw&oe=6A009234"
+                            alt="Admin profile"
+                        >
+                    </div>
                     <div class="admin-user-copy">
                         <strong id="admin-user-name">Super Admin</strong>
-                        <span id="admin-user-email" class="admin-user-email">damayojholmer@gmail.com</span>
-                        <span id="admin-user-role" class="admin-role-badge">Super Admin</span>
                     </div>
                 </div>
 
@@ -89,9 +109,6 @@
                         <h1 id="admin-page-title" class="admin-page-title">Store Command Center</h1>
                         <p id="admin-page-subtitle" class="admin-page-subtitle">Track customers, item movement, and order activity in one clean admin workspace.</p>
                         <p id="admin-hero-date" class="admin-hero-date"></p>
-                    </div>
-                    <div class="admin-hero-meta">
-                        <span id="admin-hero-chip" class="admin-hero-chip">0 orders tracked</span>
                     </div>
                 </header>
 
@@ -140,11 +157,48 @@
 
                 <section class="admin-panel" data-panel="items">
                     <div class="admin-surface">
-                        <div class="admin-surface-head">
+                        <div class="admin-surface-head admin-surface-head-actions">
                             <div>
                                 <h3>Item Catalog</h3>
                                 <span>Live storefront items with sales context</span>
                             </div>
+                            <button id="admin-toggle-item-form" class="admin-inline-btn admin-action-btn" type="button">Add Item</button>
+                        </div>
+                        <div id="admin-item-form-shell" class="admin-item-form-shell" hidden>
+                            <form id="admin-item-form" class="admin-grid-form">
+                                <label class="admin-field">
+                                    <span>Item Name</span>
+                                    <input type="text" id="admin-item-name" required>
+                                </label>
+                                <label class="admin-field">
+                                    <span>Price</span>
+                                    <input type="number" id="admin-item-price" min="0" step="0.01" required>
+                                </label>
+                                <label class="admin-field">
+                                    <span>Category</span>
+                                    <select id="admin-item-category" required>
+                                        <option value="tshirts">Tshirts</option>
+                                        <option value="pants">Pants</option>
+                                        <option value="accessories">Accessories</option>
+                                    </select>
+                                </label>
+                                <label class="admin-field admin-field-wide">
+                                    <span>Primary Image URL</span>
+                                    <input type="text" id="admin-item-image" placeholder="/products/new-item.png" required>
+                                </label>
+                                <label class="admin-field admin-field-wide">
+                                    <span>Second Image URL</span>
+                                    <input type="text" id="admin-item-image-alt" placeholder="/products/new-item-detail.png">
+                                </label>
+                                <label class="admin-field admin-field-full">
+                                    <span>Description</span>
+                                    <textarea id="admin-item-description" rows="3" required></textarea>
+                                </label>
+                                <div class="admin-form-actions">
+                                    <button type="submit" class="auth-submit-btn">Save Item</button>
+                                </div>
+                            </form>
+                            <p id="admin-item-feedback" class="admin-form-feedback" aria-live="polite"></p>
                         </div>
                         <div id="admin-items-grid" class="admin-items-grid"></div>
                     </div>
@@ -245,9 +299,95 @@
                             </div>
                             <div id="admin-settings-notes" class="admin-note-list"></div>
                         </article>
+
+                        <article class="admin-surface">
+                            <div class="admin-surface-head">
+                                <div>
+                                    <h3>Add Admin</h3>
+                                    <span>Add another admin email that can enter this console</span>
+                                </div>
+                            </div>
+                            <form id="admin-add-admin-form" class="admin-grid-form">
+                                <label class="admin-field">
+                                    <span>Admin Name</span>
+                                    <input type="text" id="admin-access-name" required>
+                                </label>
+                                <label class="admin-field">
+                                    <span>Email Address</span>
+                                    <input type="email" id="admin-access-email" required>
+                                </label>
+                                <div class="admin-form-actions">
+                                    <button type="submit" class="auth-submit-btn">Add Admin</button>
+                                </div>
+                            </form>
+                            <p id="admin-admin-feedback" class="admin-form-feedback" aria-live="polite"></p>
+                            <div id="admin-admin-list" class="admin-stack-list"></div>
+                        </article>
+
+                        <article class="admin-surface">
+                            <div class="admin-surface-head">
+                                <div>
+                                    <h3>Join Requests</h3>
+                                    <span>People asking to join the admin account</span>
+                                </div>
+                            </div>
+                            <div id="admin-access-requests" class="admin-stack-list"></div>
+                        </article>
                     </div>
                 </section>
             </main>
+        </div>
+    </div>
+
+    <div id="admin-item-modal" class="admin-item-modal" aria-hidden="true">
+        <div id="admin-item-modal-backdrop" class="admin-item-modal-backdrop"></div>
+        <div class="admin-item-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="admin-item-modal-title">
+            <button id="admin-item-modal-close" class="close-btn admin-item-modal-close" type="button" aria-label="Close item editor">&times;</button>
+            <form id="admin-edit-item-form" class="admin-item-modal-layout">
+                <div class="admin-item-modal-copy">
+                    <p class="admin-item-modal-kicker">Edit Product</p>
+                    <h2 id="admin-item-modal-title">Refine Catalog Item</h2>
+                    <p class="admin-item-modal-subtitle">Update the product name, price, and images from one polished editing space.</p>
+
+                    <div class="admin-item-modal-fields">
+                        <label class="admin-field">
+                            <span>Item Name</span>
+                            <input type="text" id="admin-edit-item-name" required>
+                        </label>
+                        <label class="admin-field">
+                            <span>Price</span>
+                            <input type="number" id="admin-edit-item-price" min="0" step="0.01" required>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="admin-item-modal-media-panel">
+                    <div class="admin-item-modal-media-head">
+                        <div>
+                            <span class="admin-item-modal-media-label">Product Images</span>
+                            <p>PNG and JPEG only. Remove the current image with the top-right close button.</p>
+                        </div>
+                    </div>
+
+                    <div id="admin-edit-item-images" class="admin-edit-item-images"></div>
+
+                    <label class="admin-item-upload" for="admin-edit-item-upload">
+                        <input
+                            type="file"
+                            id="admin-edit-item-upload"
+                            accept="image/png,image/jpeg"
+                        >
+                        <span>Upload PNG or JPEG</span>
+                        <small>Add one image at a time to keep the product gallery fresh.</small>
+                    </label>
+
+                    <p id="admin-edit-item-feedback" class="admin-form-feedback" aria-live="polite"></p>
+
+                    <div class="admin-item-modal-actions">
+                        <button type="submit" class="auth-submit-btn">Submit</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -246,13 +246,29 @@
         <section id="products" class="products-section fullscreen">
             <div class="section-container">
                 <div class="section-header reveal">
-                    <h2 class="title-serif">The Collection</h2>
-                    <div class="filter-controls">
-                        <button class="filter-btn active" data-filter="all">All</button>
-                        <button class="filter-btn" data-filter="tshirts">Tshirts</button>
-                        <button class="filter-btn" data-filter="pants">Pants</button>
-                        <button class="filter-btn" data-filter="accessories">Accessories</button>
+                    <div class="collection-heading">
+                        <h2 class="title-serif">The Collection</h2>
+                        <div class="filter-controls">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="tshirts">Tshirts</button>
+                            <button class="filter-btn" data-filter="pants">Pants</button>
+                            <button class="filter-btn" data-filter="accessories">Accessories</button>
+                        </div>
                     </div>
+                    <form id="collection-search-form" class="collection-search" role="search">
+                        <input
+                            type="search"
+                            id="collection-search-input"
+                            class="collection-search-input"
+                            placeholder="Search the collection"
+                            aria-label="Search the collection"
+                        >
+                        <button type="submit" class="collection-search-btn" aria-label="Search products">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9a4.5 4.5 0 0 0 0-9Zm9.21 11.79 1.5 1.5l-1.42 1.42-1.5-1.5-2.32-2.31 1.42-1.42 2.32 2.31Z"></path>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
                 <div id="product-grid" class="product-grid reveal">
                     <!-- Products injected by JS -->
