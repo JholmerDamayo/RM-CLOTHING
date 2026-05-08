@@ -55,6 +55,7 @@ async function initApp() {
     initOrdersUI();
     initProductModal();
     initFilters();
+    initCatalogRouteState();
     initContactForm();
     initFeedbackSystem();
     initSmoothScroll();
@@ -1256,6 +1257,39 @@ function initFilters() {
     searchInput?.addEventListener('input', () => {
         applyActiveCatalogFilters();
     });
+}
+
+function initCatalogRouteState() {
+    const params = new URLSearchParams(window.location.search);
+    const category = String(params.get('category') || '').trim().toLowerCase();
+    const search = String(params.get('search') || '').trim();
+    const supportedFilters = new Set(['all', 'tshirts', 'pants', 'accessories']);
+    const normalizedCategory = supportedFilters.has(category) ? category : 'all';
+    const targetButton = document.querySelector(`.filter-btn[data-filter="${normalizedCategory}"]`);
+    const searchInput = document.getElementById('collection-search-input');
+
+    if (!category && !search) {
+        return;
+    }
+
+    document.querySelectorAll('.filter-btn').forEach((button) => {
+        button.classList.toggle('active', button === targetButton);
+    });
+
+    if (searchInput) {
+        searchInput.value = search;
+    }
+
+    applyActiveCatalogFilters();
+
+    if (window.location.hash === '#products') {
+        window.setTimeout(() => {
+            document.getElementById('products')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 180);
+    }
 }
 
 function applyActiveCatalogFilters() {

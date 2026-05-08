@@ -204,6 +204,15 @@ function initAdminEvents() {
 }
 
 function initAdminItemModal() {
+    document.getElementById('admin-add-item-modal-close')?.addEventListener('click', () => {
+        closeAddItemModal();
+    });
+    document.getElementById('admin-add-item-modal-backdrop')?.addEventListener('click', () => {
+        closeAddItemModal();
+    });
+    document.getElementById('admin-add-item-back')?.addEventListener('click', () => {
+        closeAddItemModal();
+    });
     document.getElementById('admin-item-modal-close')?.addEventListener('click', () => {
         closeAdminItemModal();
     });
@@ -224,8 +233,37 @@ function initAdminItemModal() {
         if (event.key !== 'Escape') return;
 
         closeItemMenus();
+        closeAddItemModal();
         closeAdminItemModal();
     });
+}
+
+function openAddItemModal() {
+    const modal = document.getElementById('admin-add-item-modal');
+    const form = document.getElementById('admin-item-form');
+    const firstInput = document.getElementById('admin-item-name');
+
+    if (!modal || !form || !firstInput) return;
+
+    form.reset();
+    setAddItemFeedback('', '');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    syncAdminModalLock();
+    firstInput.focus();
+}
+
+function closeAddItemModal() {
+    const modal = document.getElementById('admin-add-item-modal');
+    const form = document.getElementById('admin-item-form');
+
+    if (!modal) return;
+
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    setAddItemFeedback('', '');
+    form?.reset();
+    syncAdminModalLock();
 }
 
 function openEditItemModal(productId) {
@@ -245,7 +283,7 @@ function openEditItemModal(productId) {
 
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('admin-modal-open');
+    syncAdminModalLock();
     nameInput.focus();
     nameInput.select();
 }
@@ -259,7 +297,7 @@ function closeAdminItemModal() {
 
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('admin-modal-open');
+    syncAdminModalLock();
 
     editingProductId = null;
     editingProductImages = [];
@@ -269,6 +307,11 @@ function closeAdminItemModal() {
     if (uploadInput) {
         uploadInput.value = '';
     }
+}
+
+function syncAdminModalLock() {
+    const hasOpenModal = Boolean(document.querySelector('.admin-item-modal.open'));
+    document.body.classList.toggle('admin-modal-open', hasOpenModal);
 }
 
 function renderEditItemImages() {
@@ -464,6 +507,19 @@ function setEditItemFeedback(message, state = '') {
     }
 }
 
+function setAddItemFeedback(message, state = '') {
+    const feedback = document.getElementById('admin-add-item-feedback');
+    if (!feedback) return;
+
+    feedback.textContent = message;
+
+    if (state) {
+        feedback.dataset.state = state;
+    } else {
+        delete feedback.dataset.state;
+    }
+}
+
 async function handleAdminLogin() {
     const email = document.getElementById('admin-login-email')?.value.trim().toLowerCase() ?? '';
     const password = document.getElementById('admin-login-password')?.value ?? '';
@@ -561,6 +617,7 @@ function renderAdminState() {
     const isLoggedIn = Boolean(adminUser);
     authScreen.hidden = isLoggedIn;
     consoleShell.hidden = !isLoggedIn;
+    document.body.classList.toggle('admin-console-active', isLoggedIn);
 
     if (!isLoggedIn) {
         return;
@@ -1025,10 +1082,7 @@ function toggleAdminRequestForm() {
 }
 
 function toggleAdminItemForm() {
-    const shell = document.getElementById('admin-item-form-shell');
-    if (!shell) return;
-
-    shell.hidden = !shell.hidden;
+    openAddItemModal();
 }
 
 function handleAdminAccessRequest() {
@@ -1072,17 +1126,21 @@ function handleAddItem() {
     const description = document.getElementById('admin-item-description')?.value.trim() ?? '';
 
     if (!name || !description || !image || !Number.isFinite(price) || price < 0) {
-        setInlineFeedback('admin-item-feedback', 'Fill in the item name, price, image, and description before saving.', 'error');
+        setAddItemFeedback('Fill in the item name, price, image, and description before saving.', 'error');
         return;
     }
 
     try {
         addCustomProduct({ name, price, category, image, imageAlt, description });
-        document.getElementById('admin-item-form')?.reset();
+        setAddItemFeedback(`${name} was added successfully. Opening the storefront collection...`, 'success');
         setInlineFeedback('admin-item-feedback', `${name} was added to the catalog.`, 'success');
         renderAdminViews();
+        window.setTimeout(() => {
+            closeAddItemModal();
+            openStorefrontCollection(category);
+        }, 240);
     } catch (error) {
-        setInlineFeedback('admin-item-feedback', error.message || 'Unable to save the item right now.', 'error');
+        setAddItemFeedback(error.message || 'Unable to save the item right now.', 'error');
     }
 }
 
@@ -1599,4 +1657,16 @@ function escapeHtml(value) {
 
 function openStorefront() {
     window.location.href = '../';
+}
+
+function openStorefrontCollection(category = 'all') {
+    const normalizedCategory = String(category || 'all').trim().toLowerCase();
+    const params = new URLSearchParams();
+
+    if (normalizedCategory && normalizedCategory !== 'all') {
+        params.set('category', normalizedCategory);
+    }
+
+    const query = params.toString();
+    window.location.href = `../${query ? `?${query}` : ''}#products`;
 }

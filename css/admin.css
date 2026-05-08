@@ -9,6 +9,7 @@
     font-family: 'Inter', sans-serif;
 }
 
+.admin-page.admin-console-active,
 .admin-page.admin-modal-open {
     overflow: hidden;
 }
@@ -110,8 +111,10 @@
     display: grid;
     grid-template-columns: 272px minmax(0, 1fr);
     min-height: 100vh;
+    height: 100vh;
     gap: 1.25rem;
     padding: 1.1rem;
+    overflow: hidden;
 }
 
 .admin-sidebar {
@@ -123,6 +126,11 @@
     background: linear-gradient(180deg, rgba(14, 34, 59, 0.98), rgba(8, 22, 40, 0.98));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     color: #ecf5ff;
+    min-height: 0;
+    height: calc(100vh - 2.2rem);
+    position: sticky;
+    top: 1.1rem;
+    overflow: hidden;
 }
 
 .admin-avatar {
@@ -165,6 +173,11 @@
 .admin-nav {
     display: grid;
     gap: 0.55rem;
+    flex: 1 1 auto;
+    align-content: start;
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 0.2rem;
 }
 
 .admin-nav-btn {
@@ -225,6 +238,11 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-height: 0;
+    height: calc(100vh - 2.2rem);
+    overflow-y: auto;
+    padding-right: 0.35rem;
+    scrollbar-gutter: stable;
 }
 
 .admin-hero-panel {
@@ -612,13 +630,6 @@
     gap: 0.9rem;
 }
 
-.admin-item-form-shell {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border-radius: 20px;
-    background: rgba(245, 248, 250, 0.9);
-}
-
 .admin-item-card {
     position: relative;
     display: grid;
@@ -867,6 +878,10 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
+.admin-item-modal-dialog-add {
+    width: min(920px, calc(100vw - 2rem));
+}
+
 .admin-item-modal-kicker {
     margin: 0 0 0.75rem;
     color: #18a190;
@@ -896,6 +911,14 @@
     display: grid;
     gap: 0.9rem;
     margin-top: 1.25rem;
+}
+
+.admin-item-modal-layout-add .admin-item-modal-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-item-modal-layout-add .admin-field-full {
+    grid-column: 1 / -1;
 }
 
 .admin-item-modal-media-panel {
@@ -1049,8 +1072,14 @@
 
 .admin-item-modal-actions {
     display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
     justify-content: flex-end;
     padding-top: 0.25rem;
+}
+
+#admin-item-feedback {
+    margin: 0 0 1rem;
 }
 
 .admin-stack-list,
@@ -1197,10 +1226,19 @@
 @media (max-width: 1100px) {
     .admin-shell {
         grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
     }
 
     .admin-sidebar {
         position: static;
+        height: auto;
+    }
+
+    .admin-main {
+        height: auto;
+        overflow: visible;
+        padding-right: 0;
     }
 
     .admin-content-grid,
@@ -1219,6 +1257,16 @@
 
     .admin-item-modal-layout {
         grid-template-columns: 1fr;
+    }
+
+    .admin-item-modal-layout-add .admin-item-modal-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1100px) {
+    .admin-page.admin-console-active {
+        overflow: auto;
     }
 }
 

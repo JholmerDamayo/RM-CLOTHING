@@ -1030,6 +1030,7 @@ body.modal-open {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--transition-mid);
@@ -1050,7 +1051,11 @@ body.modal-open {
 
 .auth-modal-dialog {
     position: relative;
-    width: min(520px, calc(100% - 1rem));
+    width: min(500px, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: linear-gradient(180deg, #f5f2ed 0%, #ffffff 100%);
     color: var(--color-black);
     border-radius: 24px;
@@ -1066,6 +1071,8 @@ body.modal-open {
 
 .auth-modal-content {
     padding: 2.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .auth-modal-kicker {

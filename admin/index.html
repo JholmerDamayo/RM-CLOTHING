@@ -164,42 +164,7 @@
                             </div>
                             <button id="admin-toggle-item-form" class="admin-inline-btn admin-action-btn" type="button">Add Item</button>
                         </div>
-                        <div id="admin-item-form-shell" class="admin-item-form-shell" hidden>
-                            <form id="admin-item-form" class="admin-grid-form">
-                                <label class="admin-field">
-                                    <span>Item Name</span>
-                                    <input type="text" id="admin-item-name" required>
-                                </label>
-                                <label class="admin-field">
-                                    <span>Price</span>
-                                    <input type="number" id="admin-item-price" min="0" step="0.01" required>
-                                </label>
-                                <label class="admin-field">
-                                    <span>Category</span>
-                                    <select id="admin-item-category" required>
-                                        <option value="tshirts">Tshirts</option>
-                                        <option value="pants">Pants</option>
-                                        <option value="accessories">Accessories</option>
-                                    </select>
-                                </label>
-                                <label class="admin-field admin-field-wide">
-                                    <span>Primary Image URL</span>
-                                    <input type="text" id="admin-item-image" placeholder="/products/new-item.png" required>
-                                </label>
-                                <label class="admin-field admin-field-wide">
-                                    <span>Second Image URL</span>
-                                    <input type="text" id="admin-item-image-alt" placeholder="/products/new-item-detail.png">
-                                </label>
-                                <label class="admin-field admin-field-full">
-                                    <span>Description</span>
-                                    <textarea id="admin-item-description" rows="3" required></textarea>
-                                </label>
-                                <div class="admin-form-actions">
-                                    <button type="submit" class="auth-submit-btn">Save Item</button>
-                                </div>
-                            </form>
-                            <p id="admin-item-feedback" class="admin-form-feedback" aria-live="polite"></p>
-                        </div>
+                        <p id="admin-item-feedback" class="admin-form-feedback" aria-live="polite"></p>
                         <div id="admin-items-grid" class="admin-items-grid"></div>
                     </div>
                 </section>
@@ -336,6 +301,68 @@
                     </div>
                 </section>
             </main>
+        </div>
+    </div>
+
+    <div id="admin-add-item-modal" class="admin-item-modal" aria-hidden="true">
+        <div id="admin-add-item-modal-backdrop" class="admin-item-modal-backdrop"></div>
+        <div class="admin-item-modal-dialog admin-item-modal-dialog-add" role="dialog" aria-modal="true" aria-labelledby="admin-add-item-modal-title">
+            <button id="admin-add-item-modal-close" class="close-btn admin-item-modal-close" type="button" aria-label="Close add item form">&times;</button>
+            <form id="admin-item-form" class="admin-item-modal-layout admin-item-modal-layout-add">
+                <div class="admin-item-modal-copy">
+                    <p class="admin-item-modal-kicker">Add Product</p>
+                    <h2 id="admin-add-item-modal-title">Create a New Catalog Item</h2>
+                    <p class="admin-item-modal-subtitle">Add a new storefront product, keep the same category structure, and publish it straight into the collection.</p>
+
+                    <div class="admin-item-modal-fields">
+                        <label class="admin-field">
+                            <span>Item Name</span>
+                            <input type="text" id="admin-item-name" required>
+                        </label>
+                        <label class="admin-field">
+                            <span>Price</span>
+                            <input type="number" id="admin-item-price" min="0" step="0.01" required>
+                        </label>
+                        <label class="admin-field">
+                            <span>Category</span>
+                            <select id="admin-item-category" required>
+                                <option value="tshirts">Tshirts</option>
+                                <option value="pants">Pants</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                        </label>
+                        <label class="admin-field admin-field-full">
+                            <span>Description</span>
+                            <textarea id="admin-item-description" rows="4" required></textarea>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="admin-item-modal-media-panel">
+                    <div class="admin-item-modal-media-head">
+                        <div>
+                            <span class="admin-item-modal-media-label">Storefront Media</span>
+                            <p>Use the same product details you already manage here, then publish this item directly to the storefront collection.</p>
+                        </div>
+                    </div>
+
+                    <label class="admin-field admin-field-wide">
+                        <span>Primary Image URL</span>
+                        <input type="text" id="admin-item-image" placeholder="/products/new-item.png" required>
+                    </label>
+                    <label class="admin-field admin-field-wide">
+                        <span>Second Image URL</span>
+                        <input type="text" id="admin-item-image-alt" placeholder="/products/new-item-detail.png">
+                    </label>
+
+                    <p id="admin-add-item-feedback" class="admin-form-feedback" aria-live="polite"></p>
+
+                    <div class="admin-item-modal-actions">
+                        <button id="admin-add-item-back" type="button" class="auth-secondary-btn">Back</button>
+                        <button type="submit" class="auth-submit-btn">Save Item</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
